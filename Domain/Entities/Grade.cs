@@ -1,6 +1,8 @@
-﻿namespace Domain.Entities;
+﻿using Domain.Common;
 
-public class Grade
+namespace Domain.Entities;
+
+public class Grade : BaseEntity
 {
     public Guid StudentId { get; set; }
     public Guid CourseId { get; set; }

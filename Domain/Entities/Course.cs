@@ -1,8 +1,9 @@
-﻿using Domain.Enums;
+﻿using Domain.Common;
+using Domain.Enums;
 
 namespace Domain.Entities;
 
-public class Course
+public class Course : BaseEntity
 {
     public string CourseCode { get; set; } 
     public string Title { get; set; }

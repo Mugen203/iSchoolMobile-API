@@ -1,6 +1,8 @@
-﻿namespace Domain.Entities;
+﻿using Domain.Common;
 
-public class LecturerEvaluation
+namespace Domain.Entities;
+
+public class LecturerEvaluation : BaseEntity
 {
     public Guid CourseId { get; set; }
     public int TeachingScore { get; set; }        // 1-5 rating
