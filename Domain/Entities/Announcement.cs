@@ -1,8 +1,9 @@
-﻿using Domain.Enums;
+﻿using Domain.Common;
+using Domain.Enums;
 
 namespace Domain.Entities;
 
-public class Announcement
+public class Announcement : BaseEntity
 {
     public string Title { get; set; }
     public string Content { get; set; }

@@ -1,8 +1,9 @@
-﻿using Domain.Enums;
+﻿using Domain.Common;
+using Domain.Enums;
 
 namespace Domain.Entities;
 
-public class Enrollment
+public class Enrollment : BaseEntity
 {
     public Guid StudentId { get; set; }
     public Guid CourseId { get; set; }
