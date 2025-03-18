@@ -3,4 +3,6 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
-/.idea/.idea.iSchool_Solution/.idea/vcs.xml
+/.idea/
+.idea.iSchool_Solution/.idea/vcs.xml
+
