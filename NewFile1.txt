@@ -1,0 +1,1608 @@
+﻿ private void SeedFaculties(ModelBuilder builder)
+    {
+        builder.Entity<Faculty>().HasData(
+            new Faculty
+            {
+                FacultyID = _facultyOfScienceId,
+                FacultyName = "Faculty of Science",
+                FacultyDescription = "Science Faculty",
+                BirthYear = new DateTimeOffset(new DateTime(1990, 1, 1))
+            },
+            new Faculty
+            {
+                FacultyID = _facultyOfArtsAndSocialSciencesId,
+                FacultyName = "Faculty of Arts and Social Sciences",
+                FacultyDescription = "Arts and Social Sciences Faculty",
+                BirthYear = new DateTimeOffset(new DateTime(1995, 1, 1))
+            },
+            new Faculty
+            {
+                FacultyID = _schoolOfNursingAndMidwiferyId,
+                FacultyName = "School of Nursing and Midwifery", // School as Faculty
+                FacultyDescription = "School of Nursing and Midwifery",
+                BirthYear = new DateTimeOffset(new DateTime(2000, 1, 1))
+            },
+            new Faculty
+            {
+                FacultyID = _schoolOfEducationId,
+                FacultyName = "School of Education", // School as Faculty
+                FacultyDescription = "School of Education",
+                BirthYear = new DateTimeOffset(new DateTime(2000, 1, 1))
+            },
+            new Faculty
+            {
+                FacultyID = _schoolOfBusinessId,
+                FacultyName = "School of Business", // School as Faculty
+                FacultyDescription = "School of Business",
+                BirthYear = new DateTimeOffset(new DateTime(2000, 1, 1))
+            },
+            new Faculty // School of Graduate Studies
+            {
+                FacultyID = _schoolOfGraduateStudiesId,
+                FacultyName = "School of Graduate Studies", // School as Faculty
+                FacultyDescription = "School of Graduate Studies",
+                BirthYear = new DateTimeOffset(new DateTime(2000, 1, 1))
+            }
+        );
+    }
+
+    private void SeedDepartments(ModelBuilder builder)
+    {
+        builder.Entity<Department>().HasData(
+            // Faculty of Science Departments
+            new Department
+            {
+                DepartmentID = _departmentOfComputerScienceId,
+                DepartmentName = "Computer Science",
+                DepartmentDescription = "Department of Computer Science",
+                BirthYear = new DateTimeOffset(new DateTime(2000, 1, 1)),
+                FacultyID = _facultyOfScienceId,
+                RequiredCredits = 120
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfInformationTechnologyId,
+                DepartmentName = "Information Technology",
+                DepartmentDescription = "Department of Information Technology",
+                BirthYear = new DateTimeOffset(new DateTime(2005, 1, 1)),
+                FacultyID = _facultyOfScienceId,
+                RequiredCredits = 120
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfBusinessInformationSystemsId,
+                DepartmentName = "Business Information Systems",
+                DepartmentDescription = "Department of Business Information Systems",
+                BirthYear = new DateTimeOffset(new DateTime(2010, 1, 1)),
+                FacultyID = _facultyOfScienceId,
+                RequiredCredits = 120
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfBiomedicalEngineeringId,
+                DepartmentName = "Biomedical Engineering",
+                DepartmentDescription = "Department of Biomedical Engineering",
+                BirthYear = new DateTimeOffset(new DateTime(2015, 1, 1)),
+                FacultyID = _facultyOfScienceId,
+                RequiredCredits = 120
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfMathematicsWithStatisticsId,
+                DepartmentName = "Mathematics with Statistics",
+                DepartmentDescription = "Department of Mathematics with Statistics",
+                BirthYear = new DateTimeOffset(new DateTime(2020, 1, 1)),
+                FacultyID = _facultyOfScienceId,
+                RequiredCredits = 120
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfAgribusinessId,
+                DepartmentName = "Agribusiness",
+                DepartmentDescription = "Department of Agribusiness",
+                BirthYear = new DateTimeOffset(new DateTime(2020, 1, 1)), // Example BirthYear
+                FacultyID = _facultyOfScienceId,
+                RequiredCredits = 120 // Example Credits
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfAgricultureId,
+                DepartmentName = "Agriculture",
+                DepartmentDescription = "Department of Agriculture",
+                BirthYear = new DateTimeOffset(new DateTime(2020, 1, 1)), // Example BirthYear
+                FacultyID = _facultyOfScienceId,
+                RequiredCredits = 120 // Example Credits
+            },
+
+            // Faculty of Arts and Social Sciences Departments
+            new Department
+            {
+                DepartmentID = _departmentOfTheologicalStudiesId,
+                DepartmentName = "Theological Studies",
+                DepartmentDescription = "Department of Theological Studies",
+                BirthYear = new DateTimeOffset(new DateTime(1980, 1, 1)),
+                FacultyID = _facultyOfArtsAndSocialSciencesId,
+                RequiredCredits = 90
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfCommunicationStudiesId,
+                DepartmentName = "Communication Studies",
+                DepartmentDescription = "Department of Communication Studies",
+                BirthYear = new DateTimeOffset(new DateTime(1990, 1, 1)),
+                FacultyID = _facultyOfArtsAndSocialSciencesId,
+                RequiredCredits = 120
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfDevelopmentStudiesId,
+                DepartmentName = "Development Studies",
+                DepartmentDescription = "Department of Development Studies",
+                BirthYear = new DateTimeOffset(new DateTime(2000, 1, 1)),
+                FacultyID = _facultyOfArtsAndSocialSciencesId,
+                RequiredCredits = 120
+            },
+
+            // School of Nursing and Midwifery Departments
+            new Department
+            {
+                DepartmentID = _departmentOfNursingId,
+                DepartmentName = "Nursing",
+                DepartmentDescription = "Department of Nursing",
+                BirthYear = new DateTimeOffset(new DateTime(2005, 1, 1)),
+                FacultyID = _schoolOfNursingAndMidwiferyId,
+                RequiredCredits = 120
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfMidwiferyId,
+                DepartmentName = "Midwifery",
+                DepartmentDescription = "Department of Midwifery",
+                BirthYear = new DateTimeOffset(new DateTime(2010, 1, 1)),
+                FacultyID = _schoolOfNursingAndMidwiferyId,
+                RequiredCredits = 120
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfMentalHealthNursingId,
+                DepartmentName = "Mental Health Nursing",
+                DepartmentDescription = "Department of Mental Health Nursing",
+                BirthYear = new DateTimeOffset(new DateTime(2015, 1, 1)),
+                FacultyID = _schoolOfNursingAndMidwiferyId,
+                RequiredCredits = 120
+            },
+
+            // School of Education Departments
+            new Department
+            {
+                DepartmentID = _departmentOfBEdEnglishLanguageId,
+                DepartmentName = "BEd English Language",
+                DepartmentDescription = "Department of BEd English Language",
+                BirthYear = new DateTimeOffset(new DateTime(2010, 1, 1)),
+                FacultyID = _schoolOfEducationId,
+                RequiredCredits = 120
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfBEdInformationTechnologyId,
+                DepartmentName = "BEd Information Technology",
+                DepartmentDescription = "Department of BEd Information Technology",
+                BirthYear = new DateTimeOffset(new DateTime(2015, 1, 1)),
+                FacultyID = _schoolOfEducationId,
+                RequiredCredits = 120
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfBEdSocialStudiesId,
+                DepartmentName = "BEd Social Studies",
+                DepartmentDescription = "Department of BEd Social Studies",
+                BirthYear = new DateTimeOffset(new DateTime(2020, 1, 1)),
+                FacultyID = _schoolOfEducationId,
+                RequiredCredits = 120
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfBEdMusicId,
+                DepartmentName = "BEd Music",
+                DepartmentDescription = "Department of BEd Music",
+                BirthYear = new DateTimeOffset(new DateTime(2020, 1, 1)),
+                FacultyID = _schoolOfEducationId,
+                RequiredCredits = 120
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfBEdAccountingId,
+                DepartmentName = "BEd Accounting",
+                DepartmentDescription = "Department of BEd Accounting",
+                BirthYear = new DateTimeOffset(new DateTime(2020, 1, 1)),
+                FacultyID = _schoolOfEducationId,
+                RequiredCredits = 120
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfBEdManagementId,
+                DepartmentName = "BEd Management",
+                DepartmentDescription = "Department of BEd Management",
+                BirthYear = new DateTimeOffset(new DateTime(2020, 1, 1)),
+                FacultyID = _schoolOfEducationId,
+                RequiredCredits = 120
+            },
+            new Department // Diploma in Music - Within School of Education
+            {
+                DepartmentID = _departmentOfMusicDiplomaId,
+                DepartmentName = "Diploma in Music",
+                DepartmentDescription = "Diploma in Music Program",
+                BirthYear = new DateTimeOffset(new DateTime(2022, 1, 1)), // Example BirthYear
+                FacultyID = _schoolOfEducationId,
+                RequiredCredits = 60 // Example Diploma Credits
+            },
+
+            // School of Business Departments
+            new Department
+            {
+                DepartmentID = _departmentOfBBAAccountingId,
+                DepartmentName = "BBA Accounting",
+                DepartmentDescription = "Department of BBA Accounting",
+                BirthYear = new DateTimeOffset(new DateTime(2010, 1, 1)),
+                FacultyID = _schoolOfBusinessId,
+                RequiredCredits = 120
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfBBABankingAndFinanceId,
+                DepartmentName = "BBA Banking and Finance",
+                DepartmentDescription = "Department of BBA Banking and Finance",
+                BirthYear = new DateTimeOffset(new DateTime(2015, 1, 1)),
+                FacultyID = _schoolOfBusinessId,
+                RequiredCredits = 120
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfBBAHumanResourceManagementId,
+                DepartmentName = "BBA Human Resource Management",
+                DepartmentDescription = "Department of BBA Human Resource Management",
+                BirthYear = new DateTimeOffset(new DateTime(2020, 1, 1)),
+                FacultyID = _schoolOfBusinessId,
+                RequiredCredits = 120
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfBBAManagementId,
+                DepartmentName = "BBA Management",
+                DepartmentDescription = "Department of BBA Management",
+                BirthYear = new DateTimeOffset(new DateTime(2020, 1, 1)),
+                FacultyID = _schoolOfBusinessId,
+                RequiredCredits = 120
+            },
+            new Department
+            {
+                DepartmentID = _departmentOfBBAMarketingId,
+                DepartmentName = "BBA Marketing",
+                DepartmentDescription = "Department of BBA Marketing",
+                BirthYear = new DateTimeOffset(new DateTime(2020, 1, 1)),
+                FacultyID = _schoolOfBusinessId,
+                RequiredCredits = 120
+            },
+            new Department // Diploma in Business Administration - Within School of Business
+            {
+                DepartmentID = _departmentOfBusinessAdministrationDiplomaId,
+                DepartmentName = "Diploma in Business Administration",
+                DepartmentDescription = "Diploma in Business Administration Program",
+                BirthYear = new DateTimeOffset(new DateTime(2022, 1, 1)), // Example BirthYear
+                FacultyID = _schoolOfBusinessId,
+                RequiredCredits = 60 // Example Diploma Credits
+            },
+
+            // School of Graduate Studies Departments
+            new Department // PhD Business Administration
+            {
+                DepartmentID = _departmentOfPhDBusinessAdministrationId,
+                DepartmentName = "PhD Business Administration",
+                DepartmentDescription = "PhD Program in Business Administration",
+                BirthYear = new DateTimeOffset(new DateTime(2023, 1, 1)), // Example BirthYear
+                FacultyID = _schoolOfGraduateStudiesId,
+                RequiredCredits = 45 // Example PhD Credits
+            },
+            new Department // PhD Computer Science
+            {
+                DepartmentID = _departmentOfPhDComputerScienceId,
+                DepartmentName = "PhD Computer Science",
+                DepartmentDescription = "PhD Program in Computer Science",
+                BirthYear = new DateTimeOffset(new DateTime(2023, 1, 1)), // Example BirthYear
+                FacultyID = _schoolOfGraduateStudiesId,
+                RequiredCredits = 45 // Example PhD Credits
+            },
+            new Department // MSc/MPhil Computer Science
+            {
+                DepartmentID = _departmentOfMScMPhilComputerScienceId,
+                DepartmentName = "MSc/MPhil Computer Science",
+                DepartmentDescription = "MSc/MPhil Program in Computer Science",
+                BirthYear = new DateTimeOffset(new DateTime(2022, 1, 1)), // Example BirthYear
+                FacultyID = _schoolOfGraduateStudiesId,
+                RequiredCredits = 30 // Example MSc/MPhil Credits
+            },
+            new Department // MBA Accounting
+            {
+                DepartmentID = _departmentOfMBAAccountingId,
+                DepartmentName = "MBA Accounting",
+                DepartmentDescription = "MBA Program in Accounting",
+                BirthYear = new DateTimeOffset(new DateTime(2022, 1, 1)), // Example BirthYear
+                FacultyID = _schoolOfGraduateStudiesId,
+                RequiredCredits = 40 // Example MBA Credits
+            },
+            new Department // MBA Strategic Management
+            {
+                DepartmentID = _departmentOfMBAStrategicManagementId,
+                DepartmentName = "MBA Strategic Management",
+                DepartmentDescription = "MBA Program in Strategic Management",
+                BirthYear = new DateTimeOffset(new DateTime(2022, 1, 1)), // Example BirthYear
+                FacultyID = _schoolOfGraduateStudiesId,
+                RequiredCredits = 40 // Example MBA Credits
+            },
+            new Department // MBA Banking & Finance
+            {
+                DepartmentID = _departmentOfMBABankingAndFinanceId,
+                DepartmentName = "MBA Banking & Finance",
+                DepartmentDescription = "MBA Program in Banking & Finance",
+                BirthYear = new DateTimeOffset(new DateTime(2022, 1, 1)), // Example BirthYear
+                FacultyID = _schoolOfGraduateStudiesId,
+                RequiredCredits = 40 // Example MBA Credits
+            },
+            new Department // MEd/MPhil Curriculum & Instruction
+            {
+                DepartmentID = _departmentOfMEDMPhilCurriculumAndInstructionId,
+                DepartmentName = "MEd/MPhil Curriculum & Instruction",
+                DepartmentDescription = "MEd/MPhil Program in Curriculum & Instruction",
+                BirthYear = new DateTimeOffset(new DateTime(2022, 1, 1)), // Example BirthYear
+                FacultyID = _schoolOfGraduateStudiesId,
+                RequiredCredits = 30 // Example MEd/MPhil Credits
+            },
+            new Department // MEd/MPhil Educational Administration & Leadership
+            {
+                DepartmentID = _departmentOfMEDMPhilEducationalAdministrationAndLeadershipId,
+                DepartmentName = "MEd/MPhil Educational Administration & Leadership",
+                DepartmentDescription = "MEd/MPhil Program in Educational Administration & Leadership",
+                BirthYear = new DateTimeOffset(new DateTime(2022, 1, 1)), // Example BirthYear
+                FacultyID = _schoolOfGraduateStudiesId,
+                RequiredCredits = 30 // Example MEd/MPhil Credits
+            },
+            new Department // Postgraduate Diploma in Education
+            {
+                DepartmentID = _departmentOfPostgraduateDiplomaInEducationId,
+                DepartmentName = "Postgraduate Diploma in Education",
+                DepartmentDescription = "Postgraduate Diploma in Education Program",
+                BirthYear = new DateTimeOffset(new DateTime(2023, 1, 1)), // Example BirthYear
+                FacultyID = _schoolOfGraduateStudiesId,
+                RequiredCredits = 30 // Example Diploma Credits
+            },
+
+            // General Education Department - University Wide Courses (No Faculty Assigned Directly)
+            new Department
+            {
+                DepartmentID = _departmentOfGeneralEducationId,
+                DepartmentName = "General Education",
+                DepartmentDescription = "University Wide General Education Courses",
+                BirthYear = new DateTimeOffset(new DateTime(2000, 1, 1)),
+                FacultyID =
+                    _facultyOfScienceId, // Example Faculty - Could be a central admin faculty or Faculty of Arts for GE courses?
+                RequiredCredits = 30
+            }
+        );
+    }
+
+    private void SeedCourses(ModelBuilder builder)
+    {
+        builder.Entity<Course>().HasData(
+            // ---------- FACULTY OF SCIENCE - Computer Science Department Courses ----------
+            new Course
+            {
+                CourseID = _courseCs101Id,
+                CourseCode = "CS101",
+                CourseName = "Introduction to Computer Science",
+                CourseDescription =
+                    "Provides a foundational overview of the field of computer science.\nCovers basic concepts and principles.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC115",
+                CourseName = "Introduction to Computer Science 1",
+                CourseDescription =
+                    "First part of introductory computer science course.\nExplores basic concepts and problem-solving.",
+                CourseCredits = 0, // NC - Non-Credit (or 1 as per image - clarified as 0 based on NC)
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC113",
+                CourseName = "Elements of Programming",
+                CourseDescription =
+                    "Introduces fundamental programming concepts and techniques.\nFocuses on problem-solving and algorithm design.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC130",
+                CourseName = "Digital Electronics",
+                CourseDescription =
+                    "Introduces principles of digital electronics and logic circuits.\nCovers digital components and systems.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC116",
+                CourseName = "Introduction to Computer Science II",
+                CourseDescription =
+                    "Second part of introductory computer science course.\nBuilds on concepts from Introduction to Computer Science I.",
+                CourseCredits = 1, // Or NC(1) clarified as 1 credit based on image marking - verify actual credit value
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC124",
+                CourseName = "Procedural Programming",
+                CourseDescription =
+                    "Focuses on procedural programming paradigms and techniques.\nEmphasizes structured programming and modular design.",
+                CourseCredits = 0, // NC - Non-Credit (or NC(**3) clarified as 0 based on NC)
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC210",
+                CourseName = "Numerical Methods",
+                CourseDescription =
+                    "Covers numerical methods for solving mathematical problems.\nFocuses on algorithms and computational techniques.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC230",
+                CourseName = "Database Systems Design",
+                CourseDescription =
+                    "Introduces database concepts and design principles.\nCovers relational database models and SQL.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC271",
+                CourseName = "Data Communication & Computer Network I",
+                CourseDescription =
+                    "First part of data communication and networking course.\nCovers network fundamentals and protocols.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC280",
+                CourseName = "Information Systems",
+                CourseDescription =
+                    "Introduces concepts of information systems and their role in organizations.\nCovers system development and management.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC214",
+                CourseName = "Computer Organization",
+                CourseDescription =
+                    "Covers the organization and architecture of computer systems.\nExplores hardware components and their interactions.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC224",
+                CourseName = "Object-Oriented Programming",
+                CourseDescription =
+                    "Focuses on object-oriented programming principles and paradigms.\nEmphasizes design patterns and software development.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC272",
+                CourseName = "Data Communication & Computer Network II",
+                CourseDescription =
+                    "Second part of data communication and networking course.\nBuilds upon concepts from Network I.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC320",
+                CourseName = "Systems Analysis and Design",
+                CourseDescription =
+                    "Covers methodologies for analyzing, designing, and developing systems.\nEmphasizes software engineering principles.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC331",
+                CourseName = "Computer Graphics",
+                CourseDescription =
+                    "Introduces principles and techniques of computer graphics.\nCovers 2D and 3D graphics rendering and animation.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC360",
+                CourseName = "Web Application Development",
+                CourseDescription =
+                    "Focuses on developing web-based applications and services.\nCovers front-end and back-end technologies.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC355",
+                CourseName = "Operating Systems",
+                CourseDescription =
+                    "Explores the principles and design of operating systems.\nCovers process management, memory management, and file systems.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC357",
+                CourseName = "Computer Architecture & Microprocessor Systems", // Combined name from image
+                CourseDescription =
+                    "Covers computer architecture and microprocessor systems.\nExplores hardware design and organization.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC361",
+                CourseName = "Data Structures & Algorithm I",
+                CourseDescription =
+                    "First part of data structures and algorithms course.\nCovers fundamental data structures and algorithm analysis.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC328",
+                CourseName = "Mobile Application Development",
+                CourseDescription =
+                    "Focuses on developing applications for mobile platforms.\nCovers mobile OS, UI design, and development tools.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC356",
+                CourseName = "Project Planning and Management",
+                CourseDescription =
+                    "Covers principles and techniques of project planning and management.\nFocuses on software project management.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC340",
+                CourseName = "Systems Programming",
+                CourseDescription =
+                    "Focuses on low-level programming and system-level interactions.\nCovers OS APIs and system calls.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC364",
+                CourseName = "Research Methods",
+                CourseDescription =
+                    "Introduces research methodologies and techniques.\nPrepares students for conducting research projects.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC370",
+                CourseName = "Operations Research",
+                CourseDescription =
+                    "Covers operations research techniques for optimization and decision-making.\nApplies mathematical modeling to solve real-world problems.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC425",
+                CourseName = "Computer Security",
+                CourseDescription =
+                    "Introduces principles and practices of computer security.\nCovers threats, vulnerabilities, and security mechanisms.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC250",
+                CourseName = "Computer Ethics",
+                CourseDescription =
+                    "Explores ethical issues in computing and information technology.\nDiscusses social and professional responsibilities.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC429",
+                CourseName = "Cloud Computing Systems",
+                CourseDescription =
+                    "Covers principles and technologies of cloud computing.\nExplores cloud platforms and service models.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC445",
+                CourseName = "Entrepreneurship and Human Development", // Combined name from image
+                CourseDescription =
+                    "Covers entrepreneurship principles and human development in technology.\nFocuses on innovation and business skills.",
+                CourseCredits = 3,
+                DepartmentID =
+                    _departmentOfComputerScienceId // Computer Science Department - or Business Dept could be co-teaching
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC447",
+                CourseName = "Software Engineering",
+                CourseDescription =
+                    "Covers advanced software engineering methodologies and practices.\nEmphasizes team-based software development.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC455",
+                CourseName = "Introduction to Artificial Intelligence",
+                CourseDescription =
+                    "Introduces fundamental concepts and techniques of artificial intelligence.\nCovers AI algorithms and applications.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC330",
+                CourseName = "Computer Simulation & Systems Modeling", // Combined name from image
+                CourseDescription =
+                    "Covers techniques for computer simulation and systems modeling.\nApplies computational methods to model real-world systems.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC491",
+                CourseName = "Final Year Project 1",
+                CourseDescription =
+                    "First part of the final year project in computer science.\nStudents begin research and project development.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC436",
+                CourseName = "Computer & Cyber Forensics (Elective 1)", // Combined name from image, Elective 1
+                CourseDescription =
+                    "Elective course focusing on computer and cyber forensics.\nCovers digital investigation techniques and cybercrime analysis.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC440",
+                CourseName = "Computer Vision (Elective 2)", // Combined name from image, Elective 2
+                CourseDescription =
+                    "Elective course on computer vision principles and applications.\nCovers image processing and analysis techniques.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC466",
+                CourseName = "Systems and Network Administration (Elective 3)", // Combined name from image, Elective 3
+                CourseDescription =
+                    "Elective course on systems and network administration.\nCovers server management, networking, and security.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC480",
+                CourseName = "Compiler Design",
+                CourseDescription =
+                    "Covers the principles and techniques of compiler design.\nExplores lexical analysis, parsing, and code generation.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "COSC492",
+                CourseName = "Final Year Project II",
+                CourseDescription =
+                    "Second part of the final year project in computer science.\nStudents complete their research and project development.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfComputerScienceId // Computer Science Department
+            },
+
+            // ---------- FACULTY OF ARTS & SOCIAL SCIENCES - Theology Department Courses ----------
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "RELB163",
+                CourseName = "Life and Teachings of Jesus",
+                CourseDescription =
+                    "Explores the life, ministry, and teachings of Jesus Christ.\nProvides a theological perspective.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfTheologicalStudiesId // Theology Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "RELBxxx", // Placeholder - Replace with actual RELB code if available from image
+                CourseName =
+                    "RELBxxx", // Placeholder - Replace with actual RELB course name (Semester 2, Year 1 Theology Course)
+                CourseDescription =
+                    "Theology Course - Second Semester, First Year.\nReplace with actual course details from Theology Department.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfTheologicalStudiesId // Theology Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "RELB251",
+                CourseName = "Principles of Christian Faith",
+                CourseDescription =
+                    "Explores fundamental principles of Christian faith and theology.\nProvides a comprehensive overview.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfTheologicalStudiesId // Theology Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "RELT385",
+                CourseName = "Introduction to Biblical Foundation & Ethics", // Combined name from image
+                CourseDescription =
+                    "Introduces biblical foundations and ethical principles.\nExplores theological and ethical frameworks.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfTheologicalStudiesId // Theology Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "RELG451",
+                CourseName = "Bible and Family Dynamics",
+                CourseDescription =
+                    "Explores biblical perspectives on family dynamics and relationships.\nProvides theological insights into family life.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfTheologicalStudiesId // Theology Department
+            },
+
+            // ---------- SCHOOL OF BUSINESS - Business Department Courses ----------
+            new Course
+            {
+                CourseID =
+                    _courseEng101Id, // Reusing ENG101 GUID as example - Replace with actual Business Course GUID if needed or create new _courseBus101Id etc.
+                CourseCode = "ACCT210",
+                CourseName = "Introduction to Accounting",
+                CourseDescription =
+                    "Introduces basic accounting principles and practices.\nCovers financial accounting fundamentals.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfBusinessId // Business Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "MGNT234",
+                CourseName = "Principles of Management",
+                CourseDescription =
+                    "Introduces fundamental management principles and theories.\nCovers planning, organizing, leading, and controlling.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfBusinessId // Business Department
+            },
+
+            // ---------- GENERAL EDUCATION Courses (University Wide) ----------
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode =
+                    "ENGL111", 
+                CourseName = "Language and Writing Skills I",
+                CourseDescription =
+                    "Develops fundamental language and writing skills.\nFocuses on grammar, vocabulary, and basic composition.",
+                CourseCredits = 2,
+                DepartmentID = _departmentOfGeneralEducationId // General Education Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "ENGL112",
+                CourseName = "Language and Writing Skills II",
+                CourseDescription =
+                    "Continues development of language and writing skills.\nBuilds upon skills from Language and Writing Skills I.",
+                CourseCredits = 2,
+                DepartmentID = _departmentOfGeneralEducationId // General Education Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "CMME115",
+                CourseName = "Introduction to Communication Skills",
+                CourseDescription =
+                    "Introduces fundamental communication theories and practices.\nDevelops effective communication abilities.",
+                CourseCredits = 2,
+                DepartmentID = _departmentOfGeneralEducationId // General Education Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "FREN121",
+                CourseName = "French for General Communication 1",
+                CourseDescription =
+                    "Introduces basic French language skills for communication.\nCovers fundamental grammar and vocabulary.",
+                CourseCredits = 2,
+                DepartmentID = _departmentOfGeneralEducationId // General Education Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "PEAC100",
+                CourseName = "Physical Activity",
+                CourseDescription =
+                    "Promotes physical fitness and well-being through activity.\nEncourages a healthy lifestyle.",
+                CourseCredits = 0, // NC - Non-Credit
+                DepartmentID = _departmentOfGeneralEducationId // General Education Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "GNED125",
+                CourseName = "Study Skills",
+                CourseDescription =
+                    "Develops effective learning and study strategies.\nEnhances academic performance and efficiency.",
+                CourseCredits = 1,
+                DepartmentID = _departmentOfGeneralEducationId // General Education Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "PHYS103",
+                CourseName = "Physics",
+                CourseDescription =
+                    "Introduces fundamental principles of physics.\nCovers mechanics, heat, light, and sound.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfGeneralEducationId // General Education Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "SOC1105/PSYC105", // Combined Course Code
+                CourseName = "General Sociology OR Intro to Psychology", // Combined Course Name
+                CourseDescription =
+                    "Introduces basic concepts of Sociology OR Psychology.\nStudents choose one of these introductory social science courses.",
+                CourseCredits = 3,
+                DepartmentID =
+                    _departmentOfGeneralEducationId // General Education Department - Could be split if departments are different
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "GNED230",
+                CourseName = "Career Exploration and Planning",
+                CourseDescription =
+                    "Guides students in exploring career options and planning their future.\nDevelops career readiness skills.",
+                CourseCredits = 1,
+                DepartmentID = _departmentOfGeneralEducationId // General Education Department
+            },
+            new Course
+            {
+                CourseID = Guid.NewGuid(),
+                CourseCode = "HLTH200",
+                CourseName = "Health Principles",
+                CourseDescription =
+                    "Explores key health principles and practices.\nPromotes healthy living and disease prevention.",
+                CourseCredits = 3,
+                DepartmentID = _departmentOfGeneralEducationId // General Education Department
+            },
+            new
+                Course // Placeholder for AFST course - You will need to replace with actual AFST codes and names from Group A and Group B.
+                {
+                    CourseID = Guid.NewGuid(),
+                    CourseCode = "AFSTxxx", // Placeholder - Replace with actual AFST code from Group A
+                    CourseName = "African Studies - Group A", // Placeholder - Replace with actual AFST course name
+                    CourseDescription =
+                        "African Studies Course - Placeholder. Replace with actual course details for Group A.",
+                    CourseCredits = 1,
+                    DepartmentID =
+                        _departmentOfGeneralEducationId // General Education Department - or specific AFST dept if exists
+                },
+            new
+                Course // Placeholder for AFST course - You will need to replace with actual AFST codes and names from Group A and Group B.
+                {
+                    CourseID = Guid.NewGuid(),
+                    CourseCode = "AFSTyyy", // Placeholder - Replace with actual AFST code from Group B
+                    CourseName = "African Studies - Group B", // Placeholder - Replace with actual AFST course name
+                    CourseDescription =
+                        "African Studies Course - Placeholder. Replace with actual course details for Group B.",
+                    CourseCredits = 1,
+                    DepartmentID =
+                        _departmentOfGeneralEducationId // General Education Department - or specific AFST dept if exists
+                }
+
+            // ... (REST OF THE COURSES FROM IMAGE - Add under appropriate department based on the Faculties/Schools and departments listed in the admissions image.  For programs listed under Schools like Nursing, Education, Business, Graduate studies, create departments for those programs if not already created and assign courses accordingly) ...
+        );
+    }
+
+    private void SeedStudents(ModelBuilder builder)
+    {
+        builder.Entity<Student>().HasData(
+            new Student
+            {
+                StudentID = "222CS01000694",
+                FirstName = "Kwaku",
+                LastName = "Affram",
+                StudentEmail = "kwakuaffram@gmail.com",
+                Address = "Kings and Queens Residence",
+                AcademicAdvisor = "Mr. Michael Asare",
+                StudentPhotoUrl =
+                    "https://unsplash.com/photos/a-man-in-a-yellow-shirt-smiling-at-the-camera-ZjDbRtR_BcE",
+                DateOfBirth = new DateTimeOffset(new DateTime(2000, 1, 1)), Gender = Gender.Male,
+                StudentPhone = "0553138727",
+                Degree = "BSc Computer Science",
+                DepartmentID = _departmentOfComputerScienceId,
+                EmergencyContactName = "Kojo Ansah Affram",
+                EmergencyContactPhone = "0501122334"
+            },
+            new Student
+            {
+                StudentID = "222CS01000695",
+                FirstName = "Patricia",
+                LastName = "Affram",
+                StudentEmail = "adubea@example.com",
+                Address = "Kings and Queens Residence",
+                AcademicAdvisor = "Papa Prince",
+                StudentPhotoUrl =
+                    "https://unsplash.com/photos/man-in-yellow-blazer-and-blue-denim-jeans-smiling-PK_t0Lrh7MM",
+                DateOfBirth = new DateTimeOffset(new DateTime(2001, 1, 1)), Gender = Gender.Female,
+                StudentPhone = "0553138727",
+                Degree = "BA English",
+                DepartmentID = _departmentOfEnglishId,
+                EmergencyContactName = "Kwaku Ampem Affram",
+                EmergencyContactPhone = "0506590716"
+            }
+        );
+    }
+
+    private void SeedLecturers(ModelBuilder builder)
+    {
+        builder.Entity<Lecturer>().HasData(
+            new Lecturer
+            {
+                LecturerID = "L001",
+                LecturerFirstName = "Michael",
+                LecturerLastName = "Asare",
+                LecturerEmail = "masare@example.com",
+                Office = "Room 101",
+                Gender = Gender.Male,
+                DepartmentID = _departmentOfComputerScienceId,
+                Credentials = "Masters"
+            },
+            new Lecturer
+            {
+                LecturerID = "L002",
+                LecturerFirstName = "Papa",
+                LecturerLastName = "Prince",
+                LecturerEmail = "papa@example.com",
+                Office = "Room 102",
+                Gender = Gender.Male,
+                DepartmentID = _departmentOfEnglishId,
+                Credentials = "PhD"
+            }
+        );
+    }
+
+    private void SeedLecturerCourses(ModelBuilder builder)
+    {
+        // Seed LecturerCourse relationships
+        builder.Entity<LecturerCourse>().HasData(
+            new LecturerCourse
+            {
+                LecturerID = "L001",
+                CourseID = _courseCs101Id,
+                AcademicYear = "2024-2025"
+            },
+            new LecturerCourse
+            {
+                LecturerID = "L001",
+                CourseID = _courseEng101Id,
+                AcademicYear = "2024-2025"
+            }
+        );
+    }
+
+    private void SeedCourseStudents(ModelBuilder builder)
+    {
+        builder.Entity<CourseStudent>().HasData(
+            new CourseStudent
+            {
+                CourseID = _courseCs101Id,
+                StudentID = "222CS01000694",
+                RegistrationPeriodID = _registrationPeriodId
+            },
+            new CourseStudent
+            {
+                CourseID = _courseEng101Id,
+                StudentID = "222CS01000694",
+                RegistrationPeriodID = _registrationPeriodId
+            }
+        );
+    }
+
+    private void SeedEvaluationPeriods(ModelBuilder builder)
+    {
+        builder.Entity<EvaluationPeriod>().HasData(
+            new EvaluationPeriod
+            {
+                Id = 1,
+                AcademicYear = "2024-2025",
+                Semester = Semester.September,
+                StartDate = new DateTimeOffset(new DateTime(2024, 9, 1)),
+                EndDate = new DateTimeOffset(new DateTime(2024, 12, 31)), IsActive = true,
+                Description = "September 2024 Evaluation"
+            }
+        );
+    }
+
+    private void SeedEvaluationQuestions(ModelBuilder builder)
+    {
+        builder.Entity<EvaluationQuestion>().HasData(
+            new EvaluationQuestion
+            {
+                Id = 1,
+                QuestionText = "How would you rate the teaching methods?",
+                Category = QuestionCategory.TeachingMethod,
+                DisplayOrder = 1,
+                IsActive = true,
+                QuestionType = QuestionType.Rating,
+                PossibleAnswers = "[\"1\", \"2\", \"3\", \"4\", \"5\"]"
+            }
+        );
+    }
+
+    private void SeedEvaluationResponses(ModelBuilder builder)
+    {
+        builder.Entity<EvaluationResponse>().HasData(
+            new EvaluationResponse
+            {
+                Id = 1,
+                LecturerEvaluationID = 1,
+                EvaluationQuestionID = 1,
+                RatingValue = 5,
+                TextResponse = "Excellent",
+                SelectedOption = "5"
+            }
+        );
+    }
+
+    private void SeedLecturerEvaluations(ModelBuilder builder)
+    {
+        builder.Entity<LecturerEvaluation>().HasData(
+            new LecturerEvaluation
+            {
+                Id = 1,
+                EvaluationPeriodID = 1,
+                CourseID = _courseCs101Id,
+                LecturerID = "L001",
+                SubmissionDate = new DateTimeOffset(new DateTime(2024, 12, 15)),
+                Comments = "Great course"
+            }
+        );
+    }
+
+    private void SeedLibraryResources(ModelBuilder builder)
+    {
+        builder.Entity<LibraryResource>().HasData(
+            new LibraryResource
+            {
+                Id = 1,
+                Title = "Introduction to Algorithms",
+                Author = "Thomas H. Cormen",
+                ISBN = "9780262033848",
+                Category = "Computer Science",
+                Publisher = "MIT Press",
+                YearPublished = 2009,
+                Edition = "3rd",
+                Description = "Comprehensive guide to algorithms",
+                Location = "Library Section A",
+                ResourceType = ResourceType.Book,
+                DigitalAccessLink = string.Empty,
+                IsDigital = false,
+                TotalCopies = 10,
+                AvailableCopies = 8
+            }
+        );
+    }
+
+    private void SeedResourceBorrowings(ModelBuilder builder)
+    {
+        builder.Entity<ResourceBorrowing>().HasData(
+            new ResourceBorrowing
+            {
+                Id = 1,
+                LibraryResourceID = 1,
+                StudentId = "222CS01000694",
+                BorrowDate = new DateTime(2024, 9, 1),
+                DueDate = new DateTime(2024, 9, 15), Status = BorrowStatus.Borrowed
+            }
+        );
+    }
+
+    private void SeedFinancialRecords(ModelBuilder builder)
+    {
+        builder.Entity<FinancialRecord>().HasData(
+            new FinancialRecord
+            {
+                FinancialRecordID = _financialRecordId,
+                StudentID = "222CS01000694",
+                Semester = Semester.September,
+                TotalFees = 5000,
+                AmountPaid = 3000,
+                OutstandingBalance = 2000,
+                LastUpdated = new DateTimeOffset(new DateTime(2024, 9, 1))
+            }
+        );
+    }
+
+    private void SeedFeeItems(ModelBuilder builder)
+    {
+        builder.Entity<FeeItem>().HasData(
+            new FeeItem
+            {
+                Id = 1,
+                FinancialRecordID = _financialRecordId,
+                Description = "Tuition Fee",
+                Amount = 4000,
+                FeeItemCategory = FeeItemCategory.Tuition, isRequired = true
+            }
+        );
+    }
+
+    private void SeedPayments(ModelBuilder builder)
+    {
+        builder.Entity<Payment>().HasData(
+            new Payment
+            {
+                PaymentID = Guid.NewGuid(),
+                FinancialRecordID = _financialRecordId, Amount = 3000,
+                PaymentDate = new DateTimeOffset(new DateTime(2024, 9, 1)),
+                PaymentMethod = PaymentMethod.MobileMoney,
+                ReferenceNumber = "123456",
+                PaymentStatus = PaymentStatus.Completed
+            }
+        );
+    }
+
+    private void SeedGrades(ModelBuilder builder)
+    {
+        builder.Entity<Grade>().HasData(
+            new Grade
+            {
+                GradeID = Guid.NewGuid(),
+                SemesterRecordID = _semesterRecordId,
+                CourseID = _courseCs101Id,
+                StudentID = "222CS01000694",
+                DateAwarded = new DateTimeOffset(new DateTime(2024, 12, 15)), GradeLetter = GradeLetter.A,
+                GradePoints = 4.0,
+                isCompleted = true,
+                Semester = Semester.September,
+                Remarks = "Excellent"
+            }
+        );
+    }
+
+    private void SeedRegistrationPeriods(ModelBuilder builder)
+    {
+        builder.Entity<RegistrationPeriod>().HasData(
+            new RegistrationPeriod
+            {
+                RegistrationPeriodID = _registrationPeriodId,
+                AcademicYear = "2024-2025",
+                Semester = "Fall",
+                StartDate = new DateTime(2024, 8, 1),
+                EndDate = new DateTime(2024, 8, 31),
+                IsActive = true,
+                Description = "September 2024 Registration",
+                AllowCourseAdd = true,
+                AllowCourseDrop = true,
+                LateRegistrationStart = new DateTime(2024, 9, 1),
+                LateRegistrationEnd = new DateTime(2024, 9, 7),
+                LateRegistrationFee = 50
+            }
+        );
+    }
+
+    private void SeedResearchProjects(ModelBuilder builder)
+    {
+        builder.Entity<ResearchProject>().HasData(
+            new ResearchProject
+            {
+                Id = 1,
+                Title = "AI in Healthcare",
+                MainAuthorID = "222CS01000694",
+                Abstract = "Research on AI applications in healthcare",
+                Keywords = "AI, Healthcare",
+                DateSubmitted = new DateTimeOffset(new DateTime(2024, 9, 1)), Status = ResearchStatus.UnderReview,
+                Department = "Computer Science"
+            }
+        );
+    }
+
+    private void SeedResearchContributors(ModelBuilder builder)
+    {
+        builder.Entity<ResearchContributor>().HasData(
+            new ResearchContributor
+            {
+                Id = 1,
+                ResearchProjectID = 1,
+                ResearchContributorID = "222CS01000694",
+                Role = "Co-author",
+                ContributionDetails = "Assisted with data analysis"
+            }
+        );
+    }
+
+    private void SeedTranscripts(ModelBuilder builder)
+    {
+        builder.Entity<Transcript>().HasData(
+            new Transcript
+            {
+                TranscriptID = _transcriptId,
+                StudentID = "222CS01000694",
+                GeneratedDate = new DateTimeOffset(new DateTime(2024, 12, 15)),
+                CummulativeGPA = 3.0,
+                CreditsAttempted = 120,
+                CreditsEarned = 120,
+                isOfficial = true,
+                AcademicStanding = AcademicStanding.FirstClass
+            }
+        );
+    }
+
+    private void SeedSemesterRecords(ModelBuilder builder)
+    {
+        builder.Entity<SemesterRecord>().HasData(
+            new SemesterRecord
+            {
+                SemesterRecordID = _semesterRecordId,
+                TranscriptID = _transcriptId,
+                Semester = Semester.September,
+                StartDate = new DateTimeOffset(new DateTime(2024, 9, 1)),
+                EndDate = new DateTimeOffset(new DateTime(2024, 12, 15)), SemesterGPA = 4.0, CreditsAttempted = 15,
+                CreditsEarned = 15
+            }
+        );
+    }
+
+    private void SeedNotifications(ModelBuilder builder)
+    {
+        builder.Entity<Notification>().HasData(
+            new Notification
+            {
+                Id = 1,
+                StudentID = "222CS01000694",
+                Title = "Welcome",
+                Message = "Welcome to the new semester!",
+                NotificationType = NotificationType.General,
+                CreatedDate = new DateTime(2024, 8, 1),
+                IsRead = false,
+                RedirectUrl = "", Priority = Priority.Medium
+            }
+        );
+    }
+
+    private void SeedUsers(ModelBuilder builder)
+    {
+        const string studentId = "222CS01000694";
+        const string studentEmail = "radahn@example.com";
+
+        var hasher = new PasswordHasher<ApiUser>();
+
+        // Create the user instance first
+        var user = new ApiUser
+        {
+            Id = studentId,
+            UserName = studentId,
+            NormalizedUserName = studentId.ToUpper(),
+            Email = studentEmail,
+            NormalizedEmail = studentEmail.ToUpper(),
+            EmailConfirmed = true,
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+            PhoneNumber = "0553138727",
+            PhoneNumberConfirmed = true,
+            TwoFactorEnabled = true,
+            LockoutEnabled = false,
+            AccessFailedCount = 0,
+            StudentID = studentId,
+            StudentFirstName = "Kwaku",
+            StudentLastName = "Affram"
+        };
+
+        // Hash the password
+        user.PasswordHash = hasher.HashPassword(user, "P@ssw0rd1");
+
+        // Seed the user
+        builder.Entity<ApiUser>().HasData(user);
+
+        // Seed the user role
+        builder.Entity<IdentityUserRole<string>>().HasData(new IdentityUserRole<string>
+        {
+            UserId = studentId,
+            RoleId = "2"
+        });
+    }
+
+    private void SeedCourseTimeSlots(ModelBuilder builder)
+    {
+        builder.Entity<CourseTimeSlot>().HasData(
+            new CourseTimeSlot
+            {
+                CourseTimeSlotID = _courseTimeSlotCs1011Id,
+                CourseID = _courseCs101Id, // Link to CS101
+                DayOfWeek = DayOfWeek.Monday,
+                StartTime = new TimeSpan(9, 0, 0), // 9:00 AM
+                EndTime = new TimeSpan(9, 50, 0), // 9:50 AM
+                Location = ClassLocation.AmericanHigh
+            },
+            new CourseTimeSlot
+            {
+                CourseTimeSlotID = _courseTimeSlotCs1012Id,
+                CourseID = _courseCs101Id, // Link to CS101
+                DayOfWeek = DayOfWeek.Wednesday,
+                StartTime = new TimeSpan(9, 0, 0), // 9:00 AM
+                EndTime = new TimeSpan(9, 50, 0), // 9:50 AM
+                Location = ClassLocation.GeneralLab
+            },
+            new CourseTimeSlot
+            {
+                CourseTimeSlotID = _courseTimeSlotEng1011Id,
+                CourseID = _courseEng101Id, // Link to ENG101
+                DayOfWeek = DayOfWeek.Tuesday,
+                StartTime = new TimeSpan(11, 0, 0), // 11:00 AM
+                EndTime = new TimeSpan(12, 15, 0), // 12:15 PM (example longer slot)
+                Location = ClassLocation.MainLab
+            }
+        );
+    }
+    
+    
+    
+    
+     // Configure decimal precision for financial properties
+            builder.Entity<FeeItem>()
+                .Property(f => f.Amount)
+                .HasPrecision(18, 2);
+    
+            builder.Entity<FinancialRecord>()
+                .Property(f => f.AmountPaid)
+                .HasPrecision(18, 2);
+    
+            builder.Entity<FinancialRecord>()
+                .Property(f => f.OutstandingBalance)
+                .HasPrecision(18, 2);
+    
+            builder.Entity<FinancialRecord>()
+                .Property(f => f.TotalFees)
+                .HasPrecision(18, 2);
+    
+            builder.Entity<Payment>()
+                .Property(p => p.Amount)
+                .HasPrecision(18, 2);
+    
+            builder.Entity<RegistrationPeriod>()
+                .Property(r => r.LateRegistrationFee)
+                .HasPrecision(18, 2);
+    
+            builder.Entity<ResourceBorrowing>()
+                .Property(r => r.LateFee)
+                .HasPrecision(18, 2);
+    
+    
+            /*// Announcement relationships
+            builder.Entity<Announcement>()
+                .HasOne(a => a.CreatedBy)
+                .WithMany()
+                .HasForeignKey(a => a.CreatedById)
+                .OnDelete(DeleteBehavior.Restrict); */
+    
+            builder.Entity<Course>()
+                .HasOne(d => d.Department)
+                .WithMany(c => c.Courses)
+                .HasForeignKey(c => c.DepartmentID);
+    
+            builder.Entity<Course>()
+                .HasMany(c => c.CourseTimeSlots) // Course has many CourseTimeSlots
+                .WithOne(cts => cts.Course) // Each CourseTimeSlot belongs to one Course
+                .HasForeignKey(cts => cts.CourseID) // Foreign key in CourseTimeSlot is CourseID
+                .OnDelete(DeleteBehavior.Cascade);
+    
+            builder.Entity<CourseStudent>()
+                .HasKey(cs => new { cs.CourseID, cs.StudentID });
+    
+            builder.Entity<CourseStudent>()
+                .HasOne(cs => cs.Course)
+                .WithMany(c => c.CourseStudents)
+                .HasForeignKey(cs => cs.CourseID)
+                .OnDelete(DeleteBehavior.Restrict);
+    
+            builder.Entity<CourseStudent>()
+                .HasOne(cs => cs.RegistrationPeriod)
+                .WithMany(rp => rp.CourseEnrollments)
+                .HasForeignKey(cs => cs.RegistrationPeriodID);
+    
+            builder.Entity<CourseStudent>()
+                .HasOne(cs => cs.Student)
+                .WithMany(s => s.CourseStudents)
+                .HasForeignKey(cs => cs.StudentID)
+                .OnDelete(DeleteBehavior.Cascade);
+    
+            builder.Entity<Department>()
+                .HasOne(d => d.Faculty)
+                .WithMany(f => f.Departments)
+                .HasForeignKey(d => d.FacultyID);
+    
+            // Financial records relationships
+            builder.Entity<FinancialRecord>()
+                .HasOne(fr => fr.Student)
+                .WithMany(s => s.FinancialRecords)
+                .HasForeignKey(fr => fr.StudentID)
+                .OnDelete(DeleteBehavior.Cascade);
+    
+            builder.Entity<FeeItem>()
+                .HasOne(fi => fi.FinancialRecord)
+                .WithMany(fr => fr.FeeItems)
+                .HasForeignKey(fi => fi.FinancialRecordID)
+                .OnDelete(DeleteBehavior.Cascade);
+    
+            builder.Entity<Payment>()
+                .HasOne(p => p.FinancialRecord)
+                .WithMany(fr => fr.Payments)
+                .HasForeignKey(p => p.FinancialRecordID)
+                .OnDelete(DeleteBehavior.Cascade);
+    
+            // Grade relationships
+            builder.Entity<Grade>()
+                .HasOne(g => g.Student)
+                .WithMany(s => s.Grades)
+                .HasForeignKey(g => g.StudentID)
+                .OnDelete(DeleteBehavior.Restrict);
+    
+            builder.Entity<Grade>()
+                .HasOne(g => g.Course)
+                .WithMany(c => c.Grades)
+                .HasForeignKey(g => g.CourseID)
+                .OnDelete(DeleteBehavior.Restrict);
+    
+            builder.Entity<LecturerCourse>()
+                .HasKey(lc => new { lc.LecturerID, lc.CourseID });
+    
+            builder.Entity<LecturerCourse>()
+                .HasOne(lc => lc.Lecturer)
+                .WithMany(l => l.LecturerCourses)
+                .HasForeignKey(lc => lc.LecturerID);
+    
+            builder.Entity<LecturerCourse>()
+                .HasOne(lc => lc.Course)
+                .WithMany(c => c.LecturerCourses)
+                .HasForeignKey(lc => lc.CourseID);
+    
+            // Evaluation relationships
+            builder.Entity<LecturerEvaluation>()
+                .HasOne(le => le.EvaluationPeriod)
+                .WithMany(ep => ep.Evaluations)
+                .HasForeignKey(le => le.EvaluationPeriodID)
+                .OnDelete(DeleteBehavior.Cascade);
+    
+            builder.Entity<LecturerEvaluation>()
+                .HasOne(le => le.Course)
+                .WithMany()
+                .HasForeignKey(le => le.CourseID)
+                .OnDelete(DeleteBehavior.Restrict);
+    
+            builder.Entity<LecturerEvaluation>()
+                .HasOne(le => le.Lecturer)
+                .WithMany(l => l.Evaluations)
+                .HasForeignKey(le => le.LecturerID)
+                .OnDelete(DeleteBehavior.Restrict);
+    
+            builder.Entity<EvaluationResponse>()
+                .HasOne(er => er.Evaluation)
+                .WithMany(le => le.Responses)
+                .HasForeignKey(er => er.LecturerEvaluationID)
+                .OnDelete(DeleteBehavior.Cascade);
+    
+            builder.Entity<EvaluationResponse>()
+                .HasOne(er => er.Question)
+                .WithMany(eq => eq.Responses)
+                .HasForeignKey(er => er.EvaluationQuestionID)
+                .OnDelete(DeleteBehavior.Restrict);
+    
+            // Research relationships
+            builder.Entity<ResearchProject>()
+                .HasOne(rp => rp.MainAuthor)
+                .WithMany()
+                .HasForeignKey(rp => rp.MainAuthorID)
+                .OnDelete(DeleteBehavior.Restrict);
+    
+            builder.Entity<ResearchContributor>()
+                .HasOne(rc => rc.Project)
+                .WithMany(rp => rp.Contributors)
+                .HasForeignKey(rc => rc.ResearchProjectID)
+                .OnDelete(DeleteBehavior.Cascade);
+    
+            builder.Entity<ResearchContributor>()
+                .HasOne(rc => rc.Contributor)
+                .WithMany()
+                .HasForeignKey(rc => rc.ResearchContributorID)
+                .OnDelete(DeleteBehavior.Restrict);
+    
+            // Notification relationships
+            builder.Entity<Notification>()
+                .HasOne(n => n.Student)
+                .WithMany(u => u.Notifications)
+                .HasForeignKey(n => n.StudentID)
+                .OnDelete(DeleteBehavior.Cascade);
+    
+            // Transcript relationships
+            builder.Entity<Transcript>()
+                .HasOne(t => t.Student)
+                .WithMany(s => s.Transcripts)
+                .HasForeignKey(t => t.StudentID)
+                .OnDelete(DeleteBehavior.Cascade);
+    
+            builder.Entity<SemesterRecord>()
+                .HasOne(sr => sr.Transcript)
+                .WithMany(t => t.SemesterRecords)
+                .HasForeignKey(sr => sr.TranscriptID)
+                .OnDelete(DeleteBehavior.Cascade);

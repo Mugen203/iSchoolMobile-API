@@ -1,0 +1,92 @@
+@baseUrl = http://localhost:3001
+@studentID = 222CS01000694
+@courseID =
+@token = 
+
+### Authentication Endpoints ###
+
+### Login
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "studentID": "{{studentID}}",
+  "password": "P@ssw0rd1"
+}
+
+### Store token from login response
+{% if response.body.token %}
+@token = {{login.response.body.token}}
+{% endif %}
+
+### Verify 2FA (if required)
+POST {{baseUrl}}/api/auth/verify-2fa
+Content-Type: application/json
+
+{
+  "studentID": "{{studentID}}",
+  "twoFactorToken": "123456"
+}
+
+### Refresh Token
+POST {{baseUrl}}/api/auth/refresh-token
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "token": "{{token}}",
+  "refreshToken": "your-refresh-token-here"
+}
+
+### Logout
+POST {{baseUrl}}/api/auth/logout
+Authorization: Bearer {{token}}
+
+
+### Student Profile Endpoints ###
+
+### Get Student Profile
+GET {{baseUrl}}/api/student/profile
+Authorization: Bearer {{token}}
+
+### Update Student Profile
+PATCH {{baseUrl}}/api/student/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "phoneNumber": "+233123456789",
+  "email": "john.doe@example.com",
+  "homeAddress": "123 Main Street, Accra",
+  "postalAddress": "P.O. Box 123, Accra",
+  "emergencyContact": {
+    "name": "Jane Doe",
+    "relationship": "Spouse",
+    "phoneNumber": "+233987654321"
+  }
+}
+
+
+### Dashboard and Transcript Endpoints ###
+
+### Get Student Dashboard
+GET {{baseUrl}}/students/{{studentID}}/dashboard
+Authorization: Bearer {{token}}
+
+### Get Student Transcript
+GET {{baseUrl}}/students/{{studentID}}/transcript/
+Authorization: Bearer {{token}}
+
+
+### Course Endpoints ###
+
+### Get Student Courses
+GET {{baseUrl}}/students/{{studentID}}/courses
+Authorization: Bearer {{token}}
+
+### Get Course Details
+GET {{baseUrl}}/students/{{studentID}}/courses/{{courseID}}
+Authorization: Bearer {{token}}
