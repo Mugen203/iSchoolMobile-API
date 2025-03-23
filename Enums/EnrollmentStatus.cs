@@ -3,6 +3,7 @@
 public enum EnrollmentStatus
 { 
     Enrolled,
+    Completed,
     Waitlisted,
     Dropped,
 }
