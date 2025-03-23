@@ -8,8 +8,14 @@ public class RequestValidator : Validator<CourseRegistrationRequest>
 {
     public RequestValidator()
     {
-        RuleFor(request => request.CourseIDs)
-            .NotNull().WithMessage("Course IDs cannot be null")
-            .NotEmpty().WithMessage("At least one course ID must be provided");
+        RuleFor(request => request.CourseCodes)
+            .NotNull().WithMessage("Course codes cannot be null")
+            .NotEmpty().WithMessage("At least one course code must be provided");
+            
+        // Regex pattern validation for course codes
+        RuleForEach(request => request.CourseCodes)
+            .NotEmpty().WithMessage("Course code cannot be empty")
+            .MaximumLength(20).WithMessage("Course code cannot exceed 20 characters")
+            .Matches(@"^[A-Z]{2,4}\d{3,4}$").WithMessage("Course code must be in format like 'COSC101' or 'CS101'");
     }
 }
