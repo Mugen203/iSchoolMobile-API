@@ -17,70 +17,113 @@ public class CourseRepository
 
     public async Task<Course?> GetCourseByIDAsync(string courseId)
     {
-        if (Guid.TryParse(courseId, out var courseGuid)) // Parse string courseId to Guid
+        if (Guid.TryParse(courseId, out var courseGuid))
+        {
             return await _context.Courses
-                .Include(c =>
-                    c.CourseTimeSlots) // Include related entities if needed for later use, e.g., registration process
+                .Include(c => c.CourseTimeSlots)
                 .Include(c => c.LecturerCourses)
                 .ThenInclude(lc => lc.Lecturer)
-                .FirstOrDefaultAsync(c => c.CourseID == courseGuid); // Use Guid to find course
+                .FirstOrDefaultAsync(c => c.CourseID == courseGuid);
+        }
 
         _logger.LogWarning($"Invalid Course ID format: {courseId}");
         return null;
     }
 
-    public async Task<IEnumerable<CourseStudent>> GetStudentCurrentCoursesAsync(string studentID)
+    public async Task<IEnumerable<CourseStudent>> GetActiveStudentCoursesAsync(string studentID)
     {
-        var currentRegistrationPeriod = await _context.RegistrationPeriods.FirstOrDefaultAsync(rp => rp.IsActive);
+        var currentRegistrationPeriod = await _context.RegistrationPeriods
+            .FirstOrDefaultAsync(rp => rp.IsActive);
 
         if (currentRegistrationPeriod == null)
         {
             _logger.LogInformation(
-                $"No active registration period found when fetching current courses for student {studentID}.");
-            return new List<CourseStudent>(); // Log and return empty list if no active period
+                $"No active registration period found when fetching active courses for student {studentID}.");
+            return new List<CourseStudent>();
         }
 
         return await _context.CourseStudents
-            .Where(cs =>
-                cs.StudentID == studentID && cs.RegistrationPeriodID == currentRegistrationPeriod.RegistrationPeriodID)
+            .Where(cs => 
+                cs.StudentID == studentID && 
+                cs.RegistrationPeriodID == currentRegistrationPeriod.RegistrationPeriodID)
             .Include(cs => cs.Course)
-            .ThenInclude(c => c.CourseTimeSlots) // Include CourseTimeSlots for schedule info
+            .ThenInclude(c => c.CourseTimeSlots)
             .Include(cs => cs.Course)
             .ThenInclude(c => c.LecturerCourses)
-            .ThenInclude(lc => lc.Lecturer) // Include Lecturers for lecturer info
+            .ThenInclude(lc => lc.Lecturer)
             .ToListAsync();
     }
 
-    public async Task<CourseStudent?> GetStudentCourseAsync(string studentID, string courseID)
+    public async Task<CourseStudent?> GetActiveStudentCourseAsync(string studentID, string courseID)
     {
-        if (Guid.TryParse(courseID, out var courseGuid))
+        if (!Guid.TryParse(courseID, out var courseGuid))
         {
-            var currentRegistrationPeriod = await _context.RegistrationPeriods.FirstOrDefaultAsync(rp => rp.IsActive);
-            if (currentRegistrationPeriod == null)
-            {
-                _logger.LogWarning(
-                    $"No active registration period found while fetching StudentCourse for student {studentID}, course {courseID}.");
-                return null; // TODO: Handle as appropriate when no active registration period
-            }
-
-            return await _context.CourseStudents
-                .FirstOrDefaultAsync(cs =>
-                    cs.StudentID == studentID &&
-                    cs.CourseID == courseGuid &&
-                    cs.RegistrationPeriodID ==
-                    currentRegistrationPeriod.RegistrationPeriodID); // Match Registration Period
+            _logger.LogWarning($"Invalid Course ID format when fetching StudentCourse: {courseID} for student {studentID}");
+            return null;
         }
 
-        _logger.LogWarning($"Invalid Course ID format when fetching StudentCourse: {courseID} for student {studentID}");
-        return null; //TODO: Handle invalid course ID
+        var currentRegistrationPeriod = await _context.RegistrationPeriods
+            .FirstOrDefaultAsync(rp => rp.IsActive);
+            
+        if (currentRegistrationPeriod == null)
+        {
+            _logger.LogWarning(
+                $"No active registration period found while fetching StudentCourse for student {studentID}, course {courseID}.");
+            return null;
+        }
+
+        return await _context.CourseStudents
+            .FirstOrDefaultAsync(cs =>
+                cs.StudentID == studentID &&
+                cs.CourseID == courseGuid &&
+                cs.RegistrationPeriodID == currentRegistrationPeriod.RegistrationPeriodID);
+    }
+
+    public async Task<IEnumerable<CourseStudent>> GetStudentCoursesByRegistrationPeriodAsync(
+        string studentID, Guid registrationPeriodID)
+    {
+        return await _context.CourseStudents
+            .Where(cs => 
+                cs.StudentID == studentID && 
+                cs.RegistrationPeriodID == registrationPeriodID)
+            .Include(cs => cs.Course)
+            .ThenInclude(c => c.CourseTimeSlots)
+            .Include(cs => cs.Course)
+            .ThenInclude(c => c.LecturerCourses)
+            .ThenInclude(lc => lc.Lecturer)
+            .Include(cs => cs.RegistrationPeriod)
+            .ToListAsync();
+    }
+
+    public async Task<bool> IsStudentEnrolledInCourseAsync(string studentID, string courseID)
+    {
+        if (!Guid.TryParse(courseID, out var courseGuid))
+        {
+            _logger.LogWarning($"Invalid Course ID format: {courseID}");
+            return false;
+        }
+
+        var currentRegistrationPeriod = await _context.RegistrationPeriods
+            .FirstOrDefaultAsync(rp => rp.IsActive);
+
+        if (currentRegistrationPeriod == null)
+        {
+            return false;
+        }
+
+        return await _context.CourseStudents
+            .AnyAsync(cs =>
+                cs.StudentID == studentID &&
+                cs.CourseID == courseGuid &&
+                cs.RegistrationPeriodID == currentRegistrationPeriod.RegistrationPeriodID);
     }
 
     public async Task AddStudentCoursesAsync(List<CourseStudent> courseStudents)
     {
-        if (courseStudents.Count <= 0)
+        if (courseStudents == null || !courseStudents.Any())
         {
             _logger.LogWarning("Attempted to add empty or null list of CourseStudents.");
-            throw new ArgumentNullException(nameof(courseStudents));
+            throw new ArgumentException("Course students list cannot be empty or null", nameof(courseStudents));
         }
 
         try
@@ -91,11 +134,31 @@ public class CourseRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error adding CourseStudents to database.");
-            throw; // TODO: Re-throw exception to be handled by service layer, or handle error and return specific result
+            throw;
         }
     }
 
-    public async Task DeleteStudentCourseAsync(CourseStudent courseStudent)
+    public async Task AddStudentCourseAsync(CourseStudent courseStudent)
+    {
+        if (courseStudent == null)
+        {
+            _logger.LogWarning("Attempted to add null CourseStudent entity.");
+            throw new ArgumentNullException(nameof(courseStudent));
+        }
+
+        try
+        {
+            await _context.CourseStudents.AddAsync(courseStudent);
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error adding CourseStudent with CourseID: {courseStudent.CourseID}, StudentID: {courseStudent.StudentID}.");
+            throw;
+        }
+    }
+
+    public async Task RemoveStudentCourseAsync(CourseStudent courseStudent)
     {
         if (courseStudent == null)
         {
@@ -112,7 +175,37 @@ public class CourseRepository
         {
             _logger.LogError(ex,
                 $"Error deleting CourseStudent entity with CourseID: {courseStudent.CourseID}, StudentID: {courseStudent.StudentID}.");
-            throw; // TODO: Re-throw to service layer for handling
+            throw;
         }
+    }
+
+    public async Task<RegistrationPeriod?> GetActiveRegistrationPeriodAsync()
+    {
+        return await _context.RegistrationPeriods
+            .FirstOrDefaultAsync(rp => rp.IsActive);
+    }
+
+    public async Task<List<Course>> GetCoursesByIdsAsync(List<string> courseIds)
+    {
+        var courses = new List<Course>();
+        
+        foreach (var id in courseIds)
+        {
+            if (Guid.TryParse(id, out var courseGuid))
+            {
+                var course = await _context.Courses
+                    .Include(c => c.CourseTimeSlots)
+                    .Include(c => c.LecturerCourses)
+                    .ThenInclude(lc => lc.Lecturer)
+                    .FirstOrDefaultAsync(c => c.CourseID == courseGuid);
+                
+                if (course != null)
+                {
+                    courses.Add(course);
+                }
+            }
+        }
+        
+        return courses;
     }
 }
