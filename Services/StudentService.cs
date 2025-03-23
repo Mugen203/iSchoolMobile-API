@@ -23,19 +23,23 @@ public class StudentService
     private readonly StudentRepository _studentRepository;
     private readonly CourseRepository _courseRepository;
     private readonly CommunicationRepository _communicationRepository;
-    private readonly TranscriptRepository _transcriptRepository;
+    private readonly TranscriptService _transcriptService; // Add this
     private readonly ILogger<StudentService> _logger;
     private readonly ApplicationDbContext _context;
 
-    public StudentService(StudentRepository studentRepository, CourseRepository courseRepository,
+    public StudentService(
+        StudentRepository studentRepository,
+        CourseRepository courseRepository,
         ILogger<StudentService> logger,
-        ApplicationDbContext context, TranscriptRepository transcriptRepository,
-        CommunicationRepository communicationRepository)
+        ApplicationDbContext context,
+        TranscriptRepository transcriptRepository,
+        CommunicationRepository communicationRepository,
+        TranscriptService transcriptService) // Add this
     {
         _studentRepository = studentRepository;
         _courseRepository = courseRepository;
-        _transcriptRepository = transcriptRepository;
         _communicationRepository = communicationRepository;
+        _transcriptService = transcriptService; // Add this
         _logger = logger;
         _context = context;
     }
@@ -137,30 +141,7 @@ public class StudentService
             Courses = scheduledCourses
         };
     }
-    
 
-    /// <summary>
-    /// Drops a course from the student's registration
-    /// </summary>
-    /// <param name="studentID">The student's unique identifier</param>
-    /// <param name="courseID">The course ID to drop</param>
-    /// <returns>True if successful</returns>
-    public async Task<bool> DropCourseAsync(string studentID, string courseID)
-    {
-        var studentCourse = await _courseRepository.GetActiveStudentCourseAsync(studentID, courseID);
-        if (studentCourse == null) throw new CourseNotFoundException(studentID, courseID);
-
-        try
-        {
-            await _courseRepository.RemoveStudentCourseAsync(studentCourse);
-            return true;
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, $"Error dropping course {courseID} for student {studentID}.");
-            return false;
-        }
-    }
 
     #endregion
 
@@ -173,43 +154,7 @@ public class StudentService
     /// <returns>The student's academic transcript</returns>
     public async Task<TranscriptSummaryResponse> GetStudentTranscriptAsync(string studentID)
     {
-        // Fetch the transcript and related data (SemesterRecords, Grades, Courses) in one go for efficiency
-        var transcript = await _context.Transcripts
-            .Include(t => t.SemesterRecords)
-            .ThenInclude(sr => sr.Grades)
-            .ThenInclude(g => g.Course)
-            .FirstOrDefaultAsync(t => t.StudentID == studentID);
-
-        if (transcript == null) throw new TranscriptNotFoundException(studentID);
-
-        await RecalculateTranscriptGPAAsync(transcript);
-
-        await _context.SaveChangesAsync();
-
-        // Get Transcript Details
-        var transcriptDetails = await _transcriptRepository.GetStudentTranscriptAsync(studentID);
-
-        // Update TranscriptSummaryResponse with Calculated GPA Values
-        transcriptDetails.CummulativeGPA = transcript.CummulativeGPA;
-        transcriptDetails.CreditsAttempted = transcript.CreditsAttempted;
-        transcriptDetails.TotalCreditsEarned = transcript.CreditsEarned;
-        transcriptDetails.Semesters = transcriptDetails.Semesters.Select(
-            srDto =>
-            {
-                var semesterRecordEntity =
-                    transcript.SemesterRecords.FirstOrDefault(srEntity =>
-                        srEntity.SemesterRecordID == srDto.SemesterRecordID);
-                if (semesterRecordEntity != null)
-                {
-                    srDto.SemesterGPA = semesterRecordEntity.SemesterGPA;
-                    srDto.Credits =
-                        semesterRecordEntity.CreditsAttempted;
-                }
-
-                return srDto;
-            }).ToList();
-
-        return transcriptDetails;
+        return await _transcriptService.GetStudentTranscriptAsync(studentID);
     }
 
     /// <summary>
@@ -237,16 +182,16 @@ public class StudentService
 
         var gradesResponse = new List<SemesterGradesResponse>();
         var courseGradeInfoList = semesterRecord.Grades.Select(grade => new CourseGradeInfo
-            {
-                GradeID = grade.GradeID,
-                CourseID = grade.CourseID,
-                CourseCode = grade.Course.CourseCode,
-                CourseName = grade.Course.CourseName,
-                Credits = grade.Course.CourseCredits,
-                Grade = grade.GradeLetter,
-                GradePoints = grade.GradeLetter.GetGradePoints(),
-                Remarks = grade.Remarks
-            })
+        {
+            GradeID = grade.GradeID,
+            CourseID = grade.CourseID,
+            CourseCode = grade.Course.CourseCode,
+            CourseName = grade.Course.CourseName,
+            Credits = grade.Course.CourseCredits,
+            Grade = grade.GradeLetter,
+            GradePoints = grade.GradeLetter.GetGradePoints(),
+            Remarks = grade.Remarks
+        })
             .ToList();
 
         gradesResponse.Add(new SemesterGradesResponse
@@ -396,7 +341,7 @@ public class StudentService
     #endregion
 
     #region Helpers
-    
+
 
     private async Task RecalculateTranscriptGPAAsync(Transcript transcript)
     {
