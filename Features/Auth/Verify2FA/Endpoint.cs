@@ -5,8 +5,17 @@ using static iSchool_Solution.Features.Auth.Verify2FA.Models;
 
 namespace iSchool_Solution.Features.Auth.Verify2FA;
 
-public class Endpoint(AuthService authService, IConfiguration configuration) : Endpoint<TwoFactorRequest, LoginResponse>
+public class Endpoint : Endpoint<TwoFactorRequest, LoginResponse>
 {
+    private readonly IConfiguration _configuration;
+    private readonly AuthService _authService;
+
+    public Endpoint(AuthService authService, IConfiguration configuration)
+    {
+        _authService = authService;
+        _configuration = configuration;
+    }
+    
     public override void Configure()
     {
         Post("api/auth/verify-2fa");
@@ -18,7 +27,7 @@ public class Endpoint(AuthService authService, IConfiguration configuration) : E
     
     public override async Task HandleAsync(TwoFactorRequest request, CancellationToken cancellationToken)
     {
-        var (is2FaRequired, jwtToken) = await authService.LoginAsync
+        var (is2FaRequired, jwtToken) = await _authService.LoginAsync
         (
             request.StudentID,
             request.TwoFactorToken
@@ -34,7 +43,7 @@ public class Endpoint(AuthService authService, IConfiguration configuration) : E
                 Message = "2FA verification successful. Login completed.",
                 RequiresTwoFactor = false,
                 ExpiresAt = DateTime.UtcNow.AddMinutes(
-                    Convert.ToDouble(configuration.GetSection("JwtSettings")["ExpiryInMinutes"] ?? "300"))
+                    Convert.ToDouble(_configuration.GetSection("JwtSettings")["ExpiryInMinutes"] ?? "300"))
             };
             
             await SendOkAsync(response, cancellationToken);

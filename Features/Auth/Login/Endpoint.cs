@@ -4,8 +4,15 @@ using static iSchool_Solution.Features.Auth.Login.Models;
 
 namespace iSchool_Solution.Features.Auth.Login;
 
-public class Endpoint(AuthService authService) : Endpoint<LoginRequest, LoginResponse>
+public class Endpoint : Endpoint<LoginRequest, LoginResponse>
 {
+    private readonly AuthService _authService;
+
+    public Endpoint(AuthService authService)
+    {
+        _authService = authService;
+    }
+
     public override void Configure()
     {
         Post("api/auth/login");
@@ -18,7 +25,7 @@ public class Endpoint(AuthService authService) : Endpoint<LoginRequest, LoginRes
 
     public override async Task HandleAsync(LoginRequest request, CancellationToken cancellationToken)
     {
-        var response = await authService.ValidateUserAsync(request);
+        var response = await _authService.ValidateUserAsync(request);
 
         if (response == null)
         {

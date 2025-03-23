@@ -6,8 +6,14 @@ using Microsoft.AspNetCore.Authorization;
 namespace iSchool_Solution.Features.Auth.Logout;
 
 [Authorize]
-public class Endpoint(AuthService authService) : EndpointWithoutRequest
+public class Endpoint : EndpointWithoutRequest
 {
+    private readonly AuthService _authService;
+
+    public Endpoint(AuthService authService)
+    {
+        _authService = authService;
+    }
     public override void Configure()
     {
         Post("api/auth/logout");
@@ -29,7 +35,7 @@ public class Endpoint(AuthService authService) : EndpointWithoutRequest
         }
 
         var studentId = studentIdClaim.Value;
-        var logoutResponse = await authService.LogoutAsync(studentId);
+        var logoutResponse = await _authService.LogoutAsync(studentId);
         
         if (logoutResponse.IsSuccessful)
         {
