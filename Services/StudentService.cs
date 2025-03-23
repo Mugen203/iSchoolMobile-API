@@ -137,134 +137,7 @@ public class StudentService
             Courses = scheduledCourses
         };
     }
-
-
-    /// <summary>
-    /// Registers a student for courses
-    /// </summary>
-    /// <param name="studentID">The student's unique identifier</param>
-    /// <param name="request">The course registration request</param>
-    /// <returns>A registration receipt with details of the registered courses</returns>
-    public async Task<RegistrationReceiptResponse> RegisterForCoursesAsync(string studentID,
-        CourseRegistrationRequest request)
-    {
-        if (request == null || request.CourseIDs.Count <= 0)
-            throw new ArgumentException("CourseIDs are required for registration.", nameof(request));
-
-        var student = await _studentRepository.GetStudentByStudentIDAsync(studentID);
-        if (student == null) throw new KeyNotFoundException($"Student with ID {studentID} not found.");
-
-        if (!await CheckFinancialEligibilityAsync(studentID))
-            throw new InvalidOperationException("Student is not financially eligible for registration.");
-
-        var activeRegistrationPeriod = await _courseRepository.GetActiveRegistrationPeriodAsync();
-        if (activeRegistrationPeriod == null) throw new RegistrationException("No active registration period found.");
-
-        await using var transaction = await _context.Database.BeginTransactionAsync(); // Start transaction
-        try
-        {
-            var registeredCoursesDetails = new List<RegisteredCourseDetails>();
-            var registeredCourses = new List<CourseStudent>();
-
-            foreach (var courseId in request.CourseIDs)
-            {
-                var course = await _courseRepository.GetCourseByIDAsync(courseId);
-                if (course == null)
-                {
-                    _logger.LogWarning(
-                        $"Course with ID {courseId} not found during registration for student {studentID}.");
-                    throw new CourseNotFoundException(studentID, courseId);
-                }
-
-                // Check if already registered for the current period
-                if (await _courseRepository.IsStudentEnrolledInCourseAsync(studentID, courseId))
-                    throw new CourseAlreadyRegisteredException(studentID, courseId);
-
-                // Create CourseStudent entity to represent registration
-                var courseStudent = new CourseStudent
-                {
-                    StudentID = studentID,
-                    CourseID = Guid.Parse(courseId),
-                    RegistrationPeriodID = activeRegistrationPeriod.RegistrationPeriodID
-                };
-                registeredCourses.Add(courseStudent);
-                registeredCoursesDetails.Add(new RegisteredCourseDetails
-                {
-                    CourseCode = course.CourseCode,
-                    CourseName = course.CourseName,
-                    Credits = course.CourseCredits,
-                    CourseFee = course.CourseCredits * 100 // Example fee calculation
-                });
-            }
-
-            if (registeredCourses.Any()) await _courseRepository.AddStudentCoursesAsync(registeredCourses);
-
-            // Calculate total fees based on registered courses
-            var totalFees = registeredCoursesDetails.Sum(c => c.CourseFee);
-
-            // Create Registration Receipt
-            var receipt = new RegistrationReceiptResponse
-            {
-                ReceiptID = Guid.NewGuid(),
-                StudentID = studentID,
-                RegistrationDate = DateTime.UtcNow,
-                RegisteredCourses = registeredCoursesDetails,
-                TotalFees = totalFees,
-                PaymentStatus = PaymentStatus.Pending
-            };
-
-            await transaction.CommitAsync(); // Commit transaction if everything succeeds
-            return receipt;
-        }
-        catch (Exception ex)
-        {
-            await transaction.RollbackAsync(); // Rollback transaction on any exception
-            _logger.LogError(ex, "Error during course registration for student {StudentID}.", studentID);
-            throw; // Re-throw the exception to be handled by global exception handler
-        }
-    }
-
-    /// <summary>
-    /// Checks for schedule conflicts between courses
-    /// </summary>
-    /// <param name="studentID">The student's unique identifier</param>
-    /// <param name="courseIDs">List of course IDs to check</param>
-    /// <returns>List of schedule conflicts if any</returns>
-    private async Task<List<ScheduleConflict>> CheckScheduleConflictsAsync(string studentID, List<string> courseIDs)
-    {
-        var studentCurrentCourses = await _courseRepository.GetActiveStudentCoursesAsync(studentID);
-        var requestedCourses = new List<Course>();
-        foreach (var courseId in courseIDs)
-        {
-            var course = await _courseRepository.GetCourseByIDAsync(courseId);
-            if (course != null) requestedCourses.Add(course);
-        }
-
-        var allCoursesToCheck = studentCurrentCourses.Select(sc => sc.Course).Concat(requestedCourses).ToList();
-        var conflicts = new List<ScheduleConflict>();
-
-        for (var i = 0; i < allCoursesToCheck.Count; i++)
-        for (var j = i + 1; j < allCoursesToCheck.Count; j++)
-        {
-            var course1 = allCoursesToCheck[i];
-            var course2 = allCoursesToCheck[j];
-
-            foreach (var slot1 in course1.CourseTimeSlots)
-            foreach (var slot2 in course2.CourseTimeSlots)
-                if (slot1.DayOfWeek == slot2.DayOfWeek)
-                    // Check for time overlap
-                    if (!(slot1.EndTime <= slot2.StartTime || slot2.EndTime <= slot1.StartTime))
-                        conflicts.Add(new ScheduleConflict
-                        {
-                            ConflictingCourseCode = course2.CourseCode,
-                            ConflictingCourseName = course2.CourseName,
-                            ConflictDay = slot1.DayOfWeek,
-                            ConflictTime = $"{slot1.StartTime:hh\\:mm tt} - {slot1.EndTime:hh\\:mm tt}"
-                        });
-        }
-
-        return conflicts;
-    }
+    
 
     /// <summary>
     /// Drops a course from the student's registration
@@ -523,22 +396,7 @@ public class StudentService
     #endregion
 
     #region Helpers
-
-    /// <summary>
-    /// Checks if the student has fulfilled financial obligations for registration
-    /// </summary>
-    /// <param name="studentID">The student's unique identifier</param>
-    /// <returns>True if eligible, false otherwise</returns>
-    private async Task<bool> CheckFinancialEligibilityAsync(string studentID)
-    {
-        // Example: Check if student has any outstanding balance.
-        var totalOwed = await _context.FeeItems
-            .Include(f => f.FinancialRecord)
-            .Where(f => f.FinancialRecord.StudentID == studentID && f.PaymentStatus == PaymentStatus.Pending)
-            .SumAsync(f => f.Amount);
-
-        return totalOwed <= 0; // Financially eligible if no outstanding balance
-    }
+    
 
     private async Task RecalculateTranscriptGPAAsync(Transcript transcript)
     {

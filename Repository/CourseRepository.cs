@@ -30,6 +30,61 @@ public class CourseRepository
         return null;
     }
 
+    public async Task<Course?> GetCourseByCodeAsync(string courseCode)
+    {
+        if (string.IsNullOrEmpty(courseCode))
+        {
+            _logger.LogWarning("Empty course code provided");
+            return null;
+        }
+
+        return await _context.Courses
+            .Include(c => c.CourseTimeSlots)
+            .Include(c => c.LecturerCourses)
+            .ThenInclude(lc => lc.Lecturer)
+            .FirstOrDefaultAsync(c => c.CourseCode == courseCode);
+    }
+
+    public async Task<List<Course>> GetCoursesByCodesAsync(List<string> courseCodes)
+    {
+        if (courseCodes == null || !courseCodes.Any())
+        {
+            _logger.LogWarning("Empty course codes list provided");
+            return new List<Course>();
+        }
+
+        return await _context.Courses
+            .Include(c => c.CourseTimeSlots)
+            .Include(c => c.LecturerCourses)
+            .ThenInclude(lc => lc.Lecturer)
+            .Where(c => courseCodes.Contains(c.CourseCode))
+            .ToListAsync();
+    }
+
+    public async Task<bool> IsStudentEnrolledInCourseByCodeAsync(string studentID, string courseCode)
+    {
+        var course = await GetCourseByCodeAsync(courseCode);
+        if (course == null)
+        {
+            _logger.LogWarning($"Course with code {courseCode} not found");
+            return false;
+        }
+
+        var currentRegistrationPeriod = await _context.RegistrationPeriods
+            .FirstOrDefaultAsync(rp => rp.IsActive);
+
+        if (currentRegistrationPeriod == null)
+        {
+            return false;
+        }
+
+        return await _context.CourseStudents
+            .AnyAsync(cs =>
+                cs.StudentID == studentID &&
+                cs.CourseID == course.CourseID &&
+                cs.RegistrationPeriodID == currentRegistrationPeriod.RegistrationPeriodID);
+    }
+
     public async Task<IEnumerable<CourseStudent>> GetActiveStudentCoursesAsync(string studentID)
     {
         var currentRegistrationPeriod = await _context.RegistrationPeriods
@@ -43,8 +98,8 @@ public class CourseRepository
         }
 
         return await _context.CourseStudents
-            .Where(cs => 
-                cs.StudentID == studentID && 
+            .Where(cs =>
+                cs.StudentID == studentID &&
                 cs.RegistrationPeriodID == currentRegistrationPeriod.RegistrationPeriodID)
             .Include(cs => cs.Course)
             .ThenInclude(c => c.CourseTimeSlots)
@@ -64,7 +119,7 @@ public class CourseRepository
 
         var currentRegistrationPeriod = await _context.RegistrationPeriods
             .FirstOrDefaultAsync(rp => rp.IsActive);
-            
+
         if (currentRegistrationPeriod == null)
         {
             _logger.LogWarning(
@@ -83,8 +138,8 @@ public class CourseRepository
         string studentID, Guid registrationPeriodID)
     {
         return await _context.CourseStudents
-            .Where(cs => 
-                cs.StudentID == studentID && 
+            .Where(cs =>
+                cs.StudentID == studentID &&
                 cs.RegistrationPeriodID == registrationPeriodID)
             .Include(cs => cs.Course)
             .ThenInclude(c => c.CourseTimeSlots)
@@ -188,7 +243,7 @@ public class CourseRepository
     public async Task<List<Course>> GetCoursesByIdsAsync(List<string> courseIds)
     {
         var courses = new List<Course>();
-        
+
         foreach (var id in courseIds)
         {
             if (Guid.TryParse(id, out var courseGuid))
@@ -198,14 +253,14 @@ public class CourseRepository
                     .Include(c => c.LecturerCourses)
                     .ThenInclude(lc => lc.Lecturer)
                     .FirstOrDefaultAsync(c => c.CourseID == courseGuid);
-                
+
                 if (course != null)
                 {
                     courses.Add(course);
                 }
             }
         }
-        
+
         return courses;
     }
 }
