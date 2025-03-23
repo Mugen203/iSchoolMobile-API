@@ -71,7 +71,6 @@ public class CourseQueryService
         // Map to response model
         var courseItems = courses.Select(c => new CourseItem
         {
-            CourseID = c.CourseID,
             CourseCode = c.CourseCode,
             CourseName = c.CourseName,
             Credits = c.CourseCredits,
@@ -98,12 +97,13 @@ public class CourseQueryService
     }
 
     /// <summary>
-    /// Gets detailed information about a specific course
+    /// Gets detailed information about a specific course by course code
     /// </summary>
     public async Task<CourseDetailsResponse> GetCourseDetailsAsync(CourseDetailsRequest request)
     {
-        if (!Guid.TryParse(request.CourseID.ToString(), out var courseGuid))
-            throw new ArgumentException("Invalid course ID format", nameof(request.CourseID));
+        // Use course code instead of ID
+        if (string.IsNullOrEmpty(request.CourseCode))
+            throw new ArgumentException("Course code cannot be empty", nameof(request.CourseCode));
 
         var course = await _context.Courses
             .Include(c => c.Department)
@@ -111,9 +111,9 @@ public class CourseQueryService
             .Include(c => c.CourseTimeSlots)
             .Include(c => c.LecturerCourses)
             .ThenInclude(lc => lc.Lecturer)
-            .FirstOrDefaultAsync(c => c.CourseID == courseGuid);
+            .FirstOrDefaultAsync(c => c.CourseCode == request.CourseCode);
 
-        if (course == null) throw new CourseNotFoundException(request.CourseID.ToString());
+        if (course == null) throw new CourseNotFoundException(request.CourseCode);
 
         // Get department name
         var departmentName = course.Department.DepartmentName;
@@ -150,7 +150,6 @@ public class CourseQueryService
 
         return new CourseDetailsResponse
         {
-            CourseID = course.CourseID,
             CourseCode = course.CourseCode,
             CourseName = course.CourseName,
             Description = course.CourseDescription,
@@ -162,7 +161,7 @@ public class CourseQueryService
             MaxCapacity = 45,
             CourseFee = courseFee,
             Prerequisites = [], // Placeholder for prerequisites
-            Syllabus = "Syllabus details will be provided by the instructor.", 
+            Syllabus = "Syllabus details will be provided by the instructor.",
             IsRegistrationOpen = isRegistrationOpen
         };
     }
@@ -246,11 +245,10 @@ public class CourseQueryService
             var enrollmentStatus = EnrollmentStatus.Enrolled;
             if (activeRegistrationPeriod != null &&
                 enrollment.RegistrationPeriodID != activeRegistrationPeriod.RegistrationPeriodID)
-                enrollmentStatus = EnrollmentStatus.Completed; 
+                enrollmentStatus = EnrollmentStatus.Completed;
 
             enrollmentItems.Add(new EnrollmentItem
             {
-                CourseID = course.CourseID,
                 CourseCode = course.CourseCode,
                 CourseName = course.CourseName,
                 Credits = course.CourseCredits,
@@ -323,7 +321,6 @@ public class CourseQueryService
                     var lecturer = course.LecturerCourses.FirstOrDefault()?.Lecturer;
                     scheduledCourses.Add(new ScheduledCourseInfo
                     {
-                        CourseID = course.CourseID,
                         CourseCode = course.CourseCode,
                         CourseName = course.CourseName,
                         Day = timeslot.DayOfWeek,
@@ -339,7 +336,6 @@ public class CourseQueryService
                 // If no timeslots are defined, still include the course with TBA schedule
                 scheduledCourses.Add(new ScheduledCourseInfo
                 {
-                    CourseID = course.CourseID,
                     CourseCode = course.CourseCode,
                     CourseName = course.CourseName,
                     Day = DayOfWeek.Monday, // Default day if no timeslots
