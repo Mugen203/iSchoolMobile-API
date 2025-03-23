@@ -6,7 +6,7 @@ public class Models
 {
     public class CourseRegistrationRequest
     {
-        public List<string> CourseIDs { get; set; } = new();
+        public List<string> CourseIDs { get; set; } = [];
     }
 
     public class RegistrationReceiptResponse

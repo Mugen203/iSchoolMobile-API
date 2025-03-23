@@ -6,4 +6,12 @@ public class Models
     {
         public string CourseID { get; set; } = string.Empty;
     }
+    
+    public class DropCourseResponse
+    {
+        public bool Success { get; set; }
+        public string CourseID { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public DateTime? DroppedAt { get; set; }
+    }
 }
