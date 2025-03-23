@@ -5,11 +5,11 @@ public class CourseNotFoundException : KeyNotFoundException
     public string StudentId { get; }
     public string CourseId { get; }
         
-    public CourseNotFoundException(string studentId, string courseId)
-        : base($"Course with ID '{courseId}' was not found for student '{studentId}'")
+    public CourseNotFoundException(string studentID, string courseID)
+        : base($"Course with ID '{courseID}' was not found for student '{studentID}'")
     {
-        StudentId = studentId;
-        CourseId = courseId;
+        StudentId = studentID;
+        CourseId = courseID;
     }
         
     public CourseNotFoundException(string studentId, string courseId, string message)
@@ -17,5 +17,9 @@ public class CourseNotFoundException : KeyNotFoundException
     {
         StudentId = studentId;
         CourseId = courseId;
+    }
+
+    public CourseNotFoundException(string courseID) : base($"Course with ID '{courseID}' was not found")
+    {
     }
 }

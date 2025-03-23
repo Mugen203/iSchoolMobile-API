@@ -1,4 +1,4 @@
-﻿using iSchool_Solution.Features.Courses.Conflicts;
+﻿using static iSchool_Solution.Features.Courses.Conflicts.Models;
 
 namespace iSchool_Solution.Exceptions;
 
@@ -7,9 +7,9 @@ namespace iSchool_Solution.Exceptions;
 /// </summary>
 public class ScheduleConflictException : InvalidOperationException
 {
-    public List<Models.ScheduleConflict> Conflicts { get; }
+    public List<ScheduleConflict> Conflicts { get; }
 
-    public ScheduleConflictException(string message, List<Models.ScheduleConflict> conflicts) 
+    public ScheduleConflictException(string message, List<ScheduleConflict> conflicts) 
         : base(message)
     {
         Conflicts = conflicts;
