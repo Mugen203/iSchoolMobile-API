@@ -4,7 +4,7 @@ public class Models
 {
     public class DropCourseRequest
     {
-        public string CourseID { get; set; } = string.Empty;
+        public string CourseCode { get; set; } = string.Empty;
     }
     
     public class DropCourseResponse

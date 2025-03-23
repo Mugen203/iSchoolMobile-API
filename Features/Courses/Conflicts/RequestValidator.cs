@@ -8,8 +8,14 @@ public class RequestValidator : Validator<ScheduleConflictRequest>
 {
     public RequestValidator()
     {
-        RuleFor(request => request.CourseID)
-            .NotNull().WithMessage("Course IDs cannot be null")
-            .NotEmpty().WithMessage("At least one course ID must be provided");
+        RuleFor(request => request.CourseCodes)
+            .NotNull().WithMessage("Course codes cannot be null")
+            .NotEmpty().WithMessage("Course codes must be provided");
+
+        RuleForEach(request => request.CourseCodes)
+            .NotNull().WithMessage("Course code cannot be null")
+            .NotEmpty().WithMessage("Course code must be provided")
+            .MaximumLength(20).WithMessage("Course code cannot exceed 20 characters")
+            .Matches(@"^[A-Z0-9]{2,10}$").WithMessage("Course code must be in a valid format (e.g., CS101)");
     }
 }

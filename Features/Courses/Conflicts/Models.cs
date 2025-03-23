@@ -1,4 +1,6 @@
-﻿namespace iSchool_Solution.Features.Courses.Conflicts;
+﻿using Microsoft.AspNetCore.Mvc;
+
+namespace iSchool_Solution.Features.Courses.Conflicts;
 
 public class Models
 {
@@ -10,7 +12,8 @@ public class Models
 
     public class ScheduleConflictRequest
     {
-        public string CourseID { get; set; } = string.Empty;
+        [FromQuery]
+        public List<string> CourseCodes { get; set; } = [];
     }
 
     public class ScheduleConflict

@@ -7,13 +7,13 @@ public class Models
     public class CourseDetailsResponse
     {
         public Guid CourseID { get; set; }
-        public string CourseCode { get; set; } = string.Empty;
-        public string CourseName { get; set; } = string.Empty;
+        public string CourseCode { get; init; } = string.Empty;
+        public string CourseName { get; init; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public int Credits { get; set; }
-        public string Department { get; set; } = string.Empty;
-        public List<LecturerInfo> Lecturers { get; set; } = [];
-        public List<ScheduleItem> Schedule { get; set; } = [];
+        public int Credits { get; init; }
+        public string Department { get; init; } = string.Empty;
+        public List<LecturerInfo> Lecturers { get; init; } = [];
+        public List<ScheduleItem> Schedule { get; init; } = [];
         public int EnrollmentCount { get; set; }
         public int MaxCapacity { get; set; }
         public decimal CourseFee { get; set; }
@@ -24,7 +24,7 @@ public class Models
     
     public class CourseDetailsRequest
     {
-        public Guid CourseID { get; set; }
+        public string CourseCode { get; init; } = string.Empty;
     }
     
     public class LecturerInfo
