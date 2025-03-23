@@ -4,6 +4,7 @@ using iSchool_Solution.Enums;
 using iSchool_Solution.Exceptions;
 using iSchool_Solution.Repository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using static iSchool_Solution.Features.Academics.GetAcademicProgress.Models;
 using static iSchool_Solution.Features.Courses.Conflicts.Models;
 using static iSchool_Solution.Features.Courses.GetSchedule.Models;
@@ -26,8 +27,10 @@ public class StudentService
     private readonly ILogger<StudentService> _logger;
     private readonly ApplicationDbContext _context;
 
-    public StudentService(StudentRepository studentRepository,CourseRepository courseRepository, ILogger<StudentService> logger,
-        ApplicationDbContext context, TranscriptRepository transcriptRepository, CommunicationRepository communicationRepository)
+    public StudentService(StudentRepository studentRepository, CourseRepository courseRepository,
+        ILogger<StudentService> logger,
+        ApplicationDbContext context, TranscriptRepository transcriptRepository,
+        CommunicationRepository communicationRepository)
     {
         _studentRepository = studentRepository;
         _courseRepository = courseRepository;
@@ -89,7 +92,7 @@ public class StudentService
         student.StudentPhotoUrl = profileRequest.StudentPhotoUrl;
         student.EmergencyContactName = profileRequest.EmergencyContactName;
         student.EmergencyContactPhone = profileRequest.EmergencyContactPhone;
-        
+
         await _studentRepository.UpdateStudentAsync(student);
         return true;
     }
@@ -105,29 +108,28 @@ public class StudentService
     /// <returns>The student's course schedule</returns>
     public async Task<ScheduleResponse> GetStudentScheduleAsync(string studentID)
     {
-        var currentCourses = await _courseRepository.GetStudentCurrentCoursesAsync(studentID);
+        var currentCourses = await _courseRepository.GetActiveStudentCoursesAsync(studentID);
         var scheduledCourses = new List<ScheduledCourseInfo>();
 
         foreach (var courseStudent in currentCourses)
         {
             var course = courseStudent.Course;
             if (course.CourseTimeSlots.Count > 0)
-            {
                 foreach (var timeslot in course.CourseTimeSlots)
                 {
                     var lecturer = course.LecturerCourses.FirstOrDefault()?.Lecturer;
                     scheduledCourses.Add(new ScheduledCourseInfo
                     {
+                        CourseID = course.CourseID,
                         CourseCode = course.CourseCode,
                         CourseName = course.CourseName,
-                        DayOfWeek = timeslot.DayOfWeek.ToString(),
+                        Day = timeslot.DayOfWeek,
                         StartTime = timeslot.StartTime.ToString(@"hh\:mm tt"),
                         EndTime = timeslot.EndTime.ToString(@"hh\:mm tt"),
                         Location = timeslot.Location.ToString(),
                         LecturerName = $"{lecturer?.LecturerFirstName} {lecturer?.LecturerLastName}"
                     });
                 }
-            }
         }
 
         return new ScheduleResponse
@@ -135,7 +137,7 @@ public class StudentService
             Courses = scheduledCourses
         };
     }
-    
+
 
     /// <summary>
     /// Registers a student for courses
@@ -143,83 +145,83 @@ public class StudentService
     /// <param name="studentID">The student's unique identifier</param>
     /// <param name="request">The course registration request</param>
     /// <returns>A registration receipt with details of the registered courses</returns>
-    public async Task<RegistrationReceiptResponse> RegisterForCoursesAsync(string studentID, CourseRegistrationRequest request)
+    public async Task<RegistrationReceiptResponse> RegisterForCoursesAsync(string studentID,
+        CourseRegistrationRequest request)
     {
         if (request == null || request.CourseIDs.Count <= 0)
-        {
             throw new ArgumentException("CourseIDs are required for registration.", nameof(request));
-        }
 
         var student = await _studentRepository.GetStudentByStudentIDAsync(studentID);
-        if (student == null)
-        {
-            throw new KeyNotFoundException($"Student with ID {studentID} not found.");
-        }
+        if (student == null) throw new KeyNotFoundException($"Student with ID {studentID} not found.");
 
         if (!await CheckFinancialEligibilityAsync(studentID))
-        {
             throw new InvalidOperationException("Student is not financially eligible for registration.");
-        }
+
+        var activeRegistrationPeriod = await _courseRepository.GetActiveRegistrationPeriodAsync();
+        if (activeRegistrationPeriod == null) throw new RegistrationException("No active registration period found.");
 
         await using var transaction = await _context.Database.BeginTransactionAsync(); // Start transaction
-    try
-    {
-        var registeredCoursesDetails = new List<RegisteredCourseDetails>();
-        var registeredCourses = new List<CourseStudent>();
-
-        foreach (var courseId in request.CourseIDs)
+        try
         {
-            var course = await _courseRepository.GetCourseByIDAsync(courseId);
-            if (course == null)
+            var registeredCoursesDetails = new List<RegisteredCourseDetails>();
+            var registeredCourses = new List<CourseStudent>();
+
+            foreach (var courseId in request.CourseIDs)
             {
-                _logger.LogWarning($"Course with ID {courseId} not found during registration for student {studentID}.");
-                throw new CourseNotFoundException(studentID, courseId);
+                var course = await _courseRepository.GetCourseByIDAsync(courseId);
+                if (course == null)
+                {
+                    _logger.LogWarning(
+                        $"Course with ID {courseId} not found during registration for student {studentID}.");
+                    throw new CourseNotFoundException(studentID, courseId);
+                }
+
+                // Check if already registered for the current period
+                if (await _courseRepository.IsStudentEnrolledInCourseAsync(studentID, courseId))
+                    throw new CourseAlreadyRegisteredException(studentID, courseId);
+
+                // Create CourseStudent entity to represent registration
+                var courseStudent = new CourseStudent
+                {
+                    StudentID = studentID,
+                    CourseID = Guid.Parse(courseId),
+                    RegistrationPeriodID = activeRegistrationPeriod.RegistrationPeriodID
+                };
+                registeredCourses.Add(courseStudent);
+                registeredCoursesDetails.Add(new RegisteredCourseDetails
+                {
+                    CourseCode = course.CourseCode,
+                    CourseName = course.CourseName,
+                    Credits = course.CourseCredits,
+                    CourseFee = course.CourseCredits * 100 // Example fee calculation
+                });
             }
 
-            // Create CourseStudent entity to represent registration
-            var courseStudent = new CourseStudent
+            if (registeredCourses.Any()) await _courseRepository.AddStudentCoursesAsync(registeredCourses);
+
+            // Calculate total fees based on registered courses
+            var totalFees = registeredCoursesDetails.Sum(c => c.CourseFee);
+
+            // Create Registration Receipt
+            var receipt = new RegistrationReceiptResponse
             {
+                ReceiptID = Guid.NewGuid(),
                 StudentID = studentID,
-                CourseID = Guid.Parse(courseId),
-                RegistrationPeriodID = Guid.NewGuid()
+                RegistrationDate = DateTime.UtcNow,
+                RegisteredCourses = registeredCoursesDetails,
+                TotalFees = totalFees,
+                PaymentStatus = PaymentStatus.Pending
             };
-            registeredCourses.Add(courseStudent);
-            registeredCoursesDetails.Add(new RegisteredCourseDetails
-            {
-                CourseCode = course.CourseCode,
-                CourseName = course.CourseName,
-                Credits = course.CourseCredits,
-            });
+
+            await transaction.CommitAsync(); // Commit transaction if everything succeeds
+            return receipt;
         }
-
-        if (registeredCourses.Any())
+        catch (Exception ex)
         {
-            await _courseRepository.AddStudentCoursesAsync(registeredCourses);
+            await transaction.RollbackAsync(); // Rollback transaction on any exception
+            _logger.LogError(ex, "Error during course registration for student {StudentID}.", studentID);
+            throw; // Re-throw the exception to be handled by global exception handler
         }
-
-        // Calculate total fees based on registered courses
-        decimal totalFees = registeredCoursesDetails.Sum(c => c.CourseFee);
-
-        // Create Registration Receipt
-        var receipt = new RegistrationReceiptResponse
-        {
-            ReceiptID = Guid.NewGuid(),
-            StudentID = studentID,
-            RegistrationDate = DateTime.UtcNow,
-            RegisteredCourses = registeredCoursesDetails,
-            TotalFees = totalFees,
-            PaymentStatus = PaymentStatus.Pending
-        };
-
-        await transaction.CommitAsync(); // Commit transaction if everything succeeds
-        return receipt;
-    }
-    catch (Exception ex)
-    {
-        await transaction.RollbackAsync(); // Rollback transaction on any exception
-        _logger.LogError(ex, "Error during course registration for student {StudentID}.", studentID);
-        throw; // Re-throw the exception to be handled by global exception handler
-    }
     }
 
     /// <summary>
@@ -230,48 +232,37 @@ public class StudentService
     /// <returns>List of schedule conflicts if any</returns>
     private async Task<List<ScheduleConflict>> CheckScheduleConflictsAsync(string studentID, List<string> courseIDs)
     {
-        var studentCurrentCourses = await _courseRepository.GetStudentCurrentCoursesAsync(studentID);
+        var studentCurrentCourses = await _courseRepository.GetActiveStudentCoursesAsync(studentID);
         var requestedCourses = new List<Course>();
         foreach (var courseId in courseIDs)
         {
             var course = await _courseRepository.GetCourseByIDAsync(courseId);
-            if (course != null)
-            {
-                requestedCourses.Add(course);
-            }
+            if (course != null) requestedCourses.Add(course);
         }
 
         var allCoursesToCheck = studentCurrentCourses.Select(sc => sc.Course).Concat(requestedCourses).ToList();
         var conflicts = new List<ScheduleConflict>();
 
         for (var i = 0; i < allCoursesToCheck.Count; i++)
+        for (var j = i + 1; j < allCoursesToCheck.Count; j++)
         {
-            for (var j = i + 1; j < allCoursesToCheck.Count; j++)
-            {
-                var course1 = allCoursesToCheck[i];
-                var course2 = allCoursesToCheck[j];
+            var course1 = allCoursesToCheck[i];
+            var course2 = allCoursesToCheck[j];
 
-                foreach (var slot1 in course1.CourseTimeSlots)
-                {
-                    foreach (var slot2 in course2.CourseTimeSlots)
-                    {
-                        if (slot1.DayOfWeek == slot2.DayOfWeek)
+            foreach (var slot1 in course1.CourseTimeSlots)
+            foreach (var slot2 in course2.CourseTimeSlots)
+                if (slot1.DayOfWeek == slot2.DayOfWeek)
+                    // Check for time overlap
+                    if (!(slot1.EndTime <= slot2.StartTime || slot2.EndTime <= slot1.StartTime))
+                        conflicts.Add(new ScheduleConflict
                         {
-                            // Check for time overlap
-                            if (!(slot1.EndTime <= slot2.StartTime || slot2.EndTime <= slot1.StartTime))
-                            {
-                                conflicts.Add(new ScheduleConflict(
-                                    ConflictingCourseCode: course2.CourseCode,
-                                    ConflictingCourseName: course2.CourseName,
-                                    ConflictDay: slot1.DayOfWeek.ToString(),
-                                    ConflictTime: $"{slot1.StartTime:hh\\:mm tt} - {slot1.EndTime:hh\\:mm tt}"
-                                ));
-                            }
-                        }
-                    }
-                }
-            }
+                            ConflictingCourseCode = course2.CourseCode,
+                            ConflictingCourseName = course2.CourseName,
+                            ConflictDay = slot1.DayOfWeek,
+                            ConflictTime = $"{slot1.StartTime:hh\\:mm tt} - {slot1.EndTime:hh\\:mm tt}"
+                        });
         }
+
         return conflicts;
     }
 
@@ -283,15 +274,12 @@ public class StudentService
     /// <returns>True if successful</returns>
     public async Task<bool> DropCourseAsync(string studentID, string courseID)
     {
-        var studentCourse = await _courseRepository.GetStudentCourseAsync(studentID, courseID);
-        if (studentCourse == null)
-        {
-            throw new CourseNotFoundException(studentID, courseID);
-        }
+        var studentCourse = await _courseRepository.GetActiveStudentCourseAsync(studentID, courseID);
+        if (studentCourse == null) throw new CourseNotFoundException(studentID, courseID);
 
         try
         {
-            await _courseRepository.DeleteStudentCourseAsync(studentCourse);
+            await _courseRepository.RemoveStudentCourseAsync(studentCourse);
             return true;
         }
         catch (Exception e)
@@ -319,24 +307,21 @@ public class StudentService
             .ThenInclude(g => g.Course)
             .FirstOrDefaultAsync(t => t.StudentID == studentID);
 
-        if (transcript == null)
-        {
-            throw new TranscriptNotFoundException(studentID);
-        }
+        if (transcript == null) throw new TranscriptNotFoundException(studentID);
 
         await RecalculateTranscriptGPAAsync(transcript);
-        
+
         await _context.SaveChangesAsync();
-        
+
         // Get Transcript Details
         var transcriptDetails = await _transcriptRepository.GetStudentTranscriptAsync(studentID);
-        
+
         // Update TranscriptSummaryResponse with Calculated GPA Values
         transcriptDetails.CummulativeGPA = transcript.CummulativeGPA;
         transcriptDetails.CreditsAttempted = transcript.CreditsAttempted;
         transcriptDetails.TotalCreditsEarned = transcript.CreditsEarned;
         transcriptDetails.Semesters = transcriptDetails.Semesters.Select(
-            srDto => 
+            srDto =>
             {
                 var semesterRecordEntity =
                     transcript.SemesterRecords.FirstOrDefault(srEntity =>
@@ -345,12 +330,12 @@ public class StudentService
                 {
                     srDto.SemesterGPA = semesterRecordEntity.SemesterGPA;
                     srDto.Credits =
-                        semesterRecordEntity.CreditsAttempted; 
+                        semesterRecordEntity.CreditsAttempted;
                 }
 
                 return srDto;
             }).ToList();
-        
+
         return transcriptDetails;
     }
 
@@ -361,24 +346,22 @@ public class StudentService
     /// <param name="semester">The semester to get grades for</param>
     /// <param name="year">The academic year</param>
     /// <returns>List of course grades</returns>
-    public async Task<List<SemesterGradesResponse>> GetSemesterGradesAsync(string studentID, Semester semester, int year)
+    public async Task<List<SemesterGradesResponse>> GetSemesterGradesAsync(string studentID, Semester semester,
+        int year)
     {
         var semesterRecord = await _context.SemesterRecords
             .Include(sr => sr.Grades)
             .ThenInclude(g => g.Course)
-            .FirstOrDefaultAsync(sr => 
-                sr.StudentID == studentID &&  
-                sr.Semester == semester && 
+            .FirstOrDefaultAsync(sr =>
+                sr.StudentID == studentID &&
+                sr.Semester == semester &&
                 sr.AcademicYear == $"{year}-{year + 1}");
 
-        if (semesterRecord == null)
-        {
-            throw new SemesterRecordNotFoundException(studentID, semester, year);
-        }
-        
+        if (semesterRecord == null) throw new SemesterRecordNotFoundException(studentID, semester, year);
+
         semesterRecord.CalculateSemesterGPA();
         await _context.SaveChangesAsync();
-        
+
         var gradesResponse = new List<SemesterGradesResponse>();
         var courseGradeInfoList = semesterRecord.Grades.Select(grade => new CourseGradeInfo
             {
@@ -398,12 +381,12 @@ public class StudentService
             SemesterGPA = semesterRecord.SemesterGPA,
             CreditsAttempted = semesterRecord.CreditsAttempted,
             CreditsEarned = semesterRecord.CreditsEarned,
-            Grades = courseGradeInfoList 
+            Grades = courseGradeInfoList
         });
 
         return gradesResponse;
     }
-    
+
 
     /// <summary>
     /// Gets a summary of the student's academic progress
@@ -414,17 +397,14 @@ public class StudentService
     {
         var transcript = await _context.Transcripts
             .Include(t => t.SemesterRecords)
-                .ThenInclude(sr => sr.Grades)
-                    .ThenInclude(g => g.Course)
+            .ThenInclude(sr => sr.Grades)
+            .ThenInclude(g => g.Course)
             .FirstOrDefaultAsync(t => t.StudentID == studentID);
 
-        if (transcript == null)
-        {
-            throw new TranscriptNotFoundException(studentID);
-        }
+        if (transcript == null) throw new TranscriptNotFoundException(studentID);
 
         await RecalculateTranscriptGPAAsync(transcript);
-        
+
         await _context.SaveChangesAsync();
 
 
@@ -433,8 +413,8 @@ public class StudentService
             CumulativeGPA = transcript.CummulativeGPA,
             CreditsAttempted = transcript.CreditsAttempted,
             CreditsEarned = transcript.CreditsEarned,
-            AcademicStanding = transcript.AcademicStanding, 
-            Semesters = new List<SemesterProgressInfo>() 
+            AcademicStanding = transcript.AcademicStanding,
+            Semesters = new List<SemesterProgressInfo>()
         };
 
         foreach (var semesterRecord in transcript.SemesterRecords)
@@ -451,7 +431,6 @@ public class StudentService
             };
 
             foreach (var grade in semesterRecord.Grades)
-            {
                 semesterProgressInfo.Courses.Add(new CourseProgressInfo
                 {
                     CourseID = grade.CourseID,
@@ -460,13 +439,11 @@ public class StudentService
                     Credits = grade.Course.CourseCredits,
                     CurrentGrade = grade.GradeLetter.ToString() // String representation of GradeLetter
                 });
-            }
             academicSummaryResponse.Semesters.Add(semesterProgressInfo); // Add SemesterProgressInfo to the list
         }
 
         return academicSummaryResponse;
     }
-    
 
     #endregion
 
@@ -482,14 +459,14 @@ public class StudentService
         var notifications = await _communicationRepository.GetNotificationsForStudentAsync(studentID);
 
         var notificationSummaries = notifications.Select(n => new NotificationSummary(
-            Id: n.Id,
-            Title: n.Title,
-            Message: n.Message,
-            Type: n.NotificationType,
-            CreatedDate: n.CreatedDate,
-            IsRead: n.IsRead,
-            Priority: n.Priority,
-            RedirectUrl: n.RedirectUrl
+            n.Id,
+            n.Title,
+            n.Message,
+            n.NotificationType,
+            n.CreatedDate,
+            n.IsRead,
+            n.Priority,
+            n.RedirectUrl
         )).ToList();
 
         return new StudentNotificationsResponse { Notifications = notificationSummaries };
@@ -503,19 +480,14 @@ public class StudentService
     /// <returns>True if successful</returns>
     public async Task<bool> MarkNotificationAsReadAsync(string notificationID, string studentID)
     {
-        var notificationGuid = Guid.Parse(notificationID); 
+        var notificationGuid = Guid.Parse(notificationID);
 
         var notification = await _context.Notifications.FindAsync(notificationGuid);
-        if (notification == null)
-        {
-            throw new NotificationNotFoundException(studentID, notificationID);
-        }
+        if (notification == null) throw new NotificationNotFoundException(studentID, notificationID);
 
         if (notification.StudentID != studentID)
-        {
             //Optional: Add authorization check to ensure student can only mark their own notifications as read
             return false;
-        }
 
         notification.IsRead = true;
         await _communicationRepository.UpdateNotificationAsync(notification);
@@ -530,22 +502,19 @@ public class StudentService
     public async Task<StudentAnnouncementsResponse> GetStudentAnnouncementsAsync(string studentID)
     {
         var student = await _studentRepository.GetStudentByStudentIDAsync(studentID);
-        if (student == null)
-        {
-            throw new StudentNotFoundException(studentID);
-        }
+        if (student == null) throw new StudentNotFoundException(studentID);
 
         var allAnnouncements = await _communicationRepository.GetAllAnnouncementsAsync();
 
         var announcementSummaries = allAnnouncements.Select(a => new NotificationSummary(
-            Id: a.Id,
-            Title: a.Title,
-            Message: a.Content,
-            Type: (NotificationType)a.Category,
-            CreatedDate: a.PublishDate, 
-            IsRead: false,
-            Priority: Priority.Medium,
-            RedirectUrl: a.AttachmentUrl
+            a.Id,
+            a.Title,
+            a.Content,
+            (NotificationType)a.Category,
+            a.PublishDate,
+            false,
+            Priority.Medium,
+            a.AttachmentUrl
         )).ToList();
 
         return new StudentAnnouncementsResponse { Announcements = announcementSummaries };
@@ -554,7 +523,7 @@ public class StudentService
     #endregion
 
     #region Helpers
-    
+
     /// <summary>
     /// Checks if the student has fulfilled financial obligations for registration
     /// </summary>
@@ -574,10 +543,7 @@ public class StudentService
     private async Task RecalculateTranscriptGPAAsync(Transcript transcript)
     {
         transcript.CalculateCummulativeGPA();
-        foreach (var semesterRecord in transcript.SemesterRecords)
-        {
-            semesterRecord.CalculateSemesterGPA();
-        }
+        foreach (var semesterRecord in transcript.SemesterRecords) semesterRecord.CalculateSemesterGPA();
         await _context.SaveChangesAsync(); // Persist GPA values
     }
 
