@@ -19,10 +19,14 @@ builder.Services.AddScoped<CommunicationRepository>();
 builder.Services.AddScoped<RegistrationRepository>();
 
 // Service registrations
-builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<StudentService>();
+builder.Services.AddScoped<CourseService>();
+builder.Services.AddScoped<CourseQueryService>();
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<EnrollmentService>();
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<TranscriptService>();
+builder.Services.AddScoped<StudentService>();
 
 builder.Services.ConfigureEmail(builder.Configuration);
 
