@@ -8,9 +8,10 @@ public class RegistrationPeriod
     {
         CourseEnrollments = new HashSet<CourseStudent>();
     }
-    
+
     [Key] public Guid RegistrationPeriodID { get; set; }
 
+    [RegularExpression(@"^\d{4}-\d{4}$", ErrorMessage = "Academic year must be in format YYYY-YYYY")]
     public string AcademicYear { get; set; }
 
     public string Semester { get; set; }
@@ -32,7 +33,7 @@ public class RegistrationPeriod
     public DateTime? LateRegistrationEnd { get; set; }
 
     public decimal? LateRegistrationFee { get; set; }
-    
+
     // Collection Property
     public virtual ICollection<CourseStudent> CourseEnrollments { get; set; }
 }

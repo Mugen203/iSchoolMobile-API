@@ -17,13 +17,14 @@ public class SemesterRecord
     [ForeignKey(nameof(Transcript))]
     public Guid TranscriptID { get; set; }
     public Transcript Transcript { get; set; }
-    
+
     [ForeignKey(nameof(Student))]
     public string StudentID { get; set; }
-    
+
     public Student Student { get; set; }
-    
-    public string AcademicYear { get; set; } 
+
+    [RegularExpression(@"^\d{4}-\d{4}$", ErrorMessage = "Academic year must be in format YYYY-YYYY")]
+    public string AcademicYear { get; set; }
 
     public Semester Semester { get; set; }
 
@@ -38,7 +39,7 @@ public class SemesterRecord
 
     // Navigation Properties
     public virtual ICollection<Grade> Grades { get; set; }
-    
+
     public void CalculateSemesterGPA()
     {
         double totalGradePoints = 0;
@@ -57,18 +58,18 @@ public class SemesterRecord
                 }
             }
             else switch (grade.GradeLetter)
-            {
-                // Pass counts as earned credits
-                case GradeLetter.P:
-                    totalCreditsEarned += grade.Course.CourseCredits;
-                    totalCreditsAttempted += grade.Course.CourseCredits; 
-                    break;
-                case GradeLetter.NP:
-                // Count NP and NA as attempted credits (even if not GPA impacting)
-                case GradeLetter.NA:
-                    totalCreditsAttempted += grade.Course.CourseCredits;
-                    break;
-            }
+                {
+                    // Pass counts as earned credits
+                    case GradeLetter.P:
+                        totalCreditsEarned += grade.Course.CourseCredits;
+                        totalCreditsAttempted += grade.Course.CourseCredits;
+                        break;
+                    case GradeLetter.NP:
+                    // Count NP and NA as attempted credits (even if not GPA impacting)
+                    case GradeLetter.NA:
+                        totalCreditsAttempted += grade.Course.CourseCredits;
+                        break;
+                }
         }
 
         CreditsAttempted = totalCreditsAttempted;

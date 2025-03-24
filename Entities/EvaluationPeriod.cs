@@ -12,6 +12,7 @@ public class EvaluationPeriod
 
     [Key] public int Id { get; set; }
 
+    [RegularExpression(@"^\d{4}-\d{4}$", ErrorMessage = "Academic year must be in format YYYY-YYYY")]
     public string AcademicYear { get; set; }
 
     public Semester Semester { get; set; }
