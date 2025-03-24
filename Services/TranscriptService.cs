@@ -5,6 +5,7 @@ using iSchool_Solution.Exceptions;
 using iSchool_Solution.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using static iSchool_Solution.Features.Transcript.Download.Models;
 using static iSchool_Solution.Features.Transcript.Get.Models;
 using static iSchool_Solution.Features.Transcript.GetSemester.Models;
 
@@ -78,8 +79,8 @@ public class TranscriptService
             .Include(sr => sr.Transcript)
             .Include(sr => sr.Grades)
             .ThenInclude(g => g.Course)
-            .FirstOrDefaultAsync(sr => 
-                sr.StudentID == studentID && 
+            .FirstOrDefaultAsync(sr =>
+                sr.StudentID == studentID &&
                 sr.SemesterRecordID == semesterRecordID);
 
         if (semesterRecord == null)
@@ -124,13 +125,13 @@ public class TranscriptService
             .Include(sr => sr.Transcript)
             .Include(sr => sr.Grades)
             .ThenInclude(g => g.Course)
-            .FirstOrDefaultAsync(sr => 
-                sr.StudentID == studentID && 
-                sr.AcademicYear == academicYear && 
+            .FirstOrDefaultAsync(sr =>
+                sr.StudentID == studentID &&
+                sr.AcademicYear == academicYear &&
                 sr.Semester == semester);
 
         if (semesterRecord == null)
-            throw new SemesterRecordNotFoundException(studentID, semester, 
+            throw new SemesterRecordNotFoundException(studentID, semester,
                 int.Parse(academicYear.Split('-')[0]));
 
         // Now get transcript using the semester record ID
@@ -159,6 +160,133 @@ public class TranscriptService
             >= 2.75 => AcademicStanding.SecondClassLower,
             >= 2.00 => AcademicStanding.ThirdClass,
             _ => AcademicStanding.Fail
+        };
+    }
+
+    /// <summary>
+    /// Generates a downloadable transcript file for a student
+    /// </summary>
+    public async Task<DownloadTranscriptResponse> GenerateDownloadableTranscriptAsync(
+        string studentID, bool isOfficial, TranscriptFormat format, Guid? semesterID = null, string? purpose = null)
+    {
+        // 1. Verify the student exists and can download transcripts
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.StudentID == studentID);
+
+        if (student == null)
+            throw new StudentNotFoundException(studentID);
+
+        // 2. Get transcript data - handle the different types separately
+        object transcriptData;
+        if (semesterID.HasValue)
+            transcriptData = await GetSemesterTranscriptAsync(studentID, semesterID.Value);
+        else
+            transcriptData = await GetStudentTranscriptAsync(studentID);
+
+        // 3. Check if student can get official transcript if requested
+        if (isOfficial)
+        {
+            var transcript = await _context.Transcripts
+                .FirstOrDefaultAsync(t => t.StudentID == studentID);
+
+            if (transcript == null)
+                throw new TranscriptNotFoundException(studentID);
+
+            if (!transcript.isOfficial)
+                throw new TranscriptRequestException("Official transcript not available for this student due to holds or restrictions");
+
+            // Log official transcript request for audit
+            await LogTranscriptRequestAsync(studentID, isOfficial, purpose);
+        }
+
+        // 4. Generate the actual file
+        var fileData = await GenerateTranscriptFileAsync(transcriptData, format, isOfficial);
+
+        // Get file extension based on format enum
+        var fileExtension = GetFileExtension(format);
+
+        // 5. Save the file to storage
+        var fileName = $"transcript_{studentID}_{DateTime.UtcNow:yyyyMMddHHmmss}{fileExtension}";
+        var uploadResult = await SaveTranscriptFileAsync(fileName, fileData, isOfficial);
+
+        // 6. Create response with file details
+        var response = new DownloadTranscriptResponse
+        {
+            TranscriptID = Guid.NewGuid(),
+            IsOfficial = isOfficial,
+            GeneratedDate = DateTimeOffset.UtcNow,
+            FileName = fileName,
+            FileUrl = uploadResult.FileUrl,
+            FileType = GetMimeType(format),
+            FileSize = uploadResult.FileSize,
+            ExpiryDays = isOfficial ? 30 : 7, // Official transcripts available longer
+            IsPasswordProtected = isOfficial, // Official transcripts are password protected
+            RequiresAuthentication = true // Always require authentication
+        };
+
+        return response;
+    }
+
+    // Helper methods
+    private async Task<string> GenerateTranscriptFileAsync(object transcriptData, TranscriptFormat format, bool isOfficial)
+    {
+        _logger.LogInformation("Generating {Format} transcript file (Official: {IsOfficial})", format, isOfficial);
+
+        // Handle different types of transcript data
+        if (transcriptData is SemesterTranscriptResponse semesterTranscript)
+        {
+            // TODO: Generate semester-specific transcript
+        }
+        else if (transcriptData is TranscriptSummaryResponse fullTranscript)
+        {
+            // TODO: Generate full transcript
+        }
+
+        await Task.Delay(100); // Simulate file generation time
+        return "MockFileContents";
+    }
+
+    private async Task<(string FileUrl, string FileSize)> SaveTranscriptFileAsync(string fileName, string fileData, bool isOfficial)
+    {
+        // TODO: Implement storage to local file system
+        _logger.LogInformation("Saving transcript file {FileName}", fileName);
+
+        // Simulate saving delay and generate a temporary URL
+        await Task.Delay(100);
+
+        // Example URL that would be a working download link in a real system
+        var url = $"/api/transcripts/download/{fileName}?temp=true";
+        return (url, "256 KB"); // Mock file size
+    }
+
+    private async Task LogTranscriptRequestAsync(string studentID, bool isOfficial, string? purpose)
+    {
+        // In a real system, you would log this to a database table for audit purposes
+        _logger.LogInformation(
+            "Transcript request logged - Student: {StudentID}, Official: {IsOfficial}, Purpose: {Purpose}",
+            studentID, isOfficial, purpose ?? "Not specified");
+
+        await Task.CompletedTask;
+    }
+
+    // Helper methods to work with the TranscriptFormat enum
+    private string GetFileExtension(TranscriptFormat format)
+    {
+        return format switch
+        {
+            TranscriptFormat.Pdf => ".pdf",
+            TranscriptFormat.Docx => ".docx",
+            _ => throw new ArgumentException($"Unsupported transcript format: {format}")
+        };
+    }
+
+    private string GetMimeType(TranscriptFormat format)
+    {
+        return format switch
+        {
+            TranscriptFormat.Pdf => "application/pdf",
+            TranscriptFormat.Docx => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            _ => throw new ArgumentException($"Unsupported transcript format: {format}")
         };
     }
 }

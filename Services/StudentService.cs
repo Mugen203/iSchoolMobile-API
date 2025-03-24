@@ -15,6 +15,7 @@ using static iSchool_Solution.Features.Notifications.GetAnnouncements.Models;
 using static iSchool_Solution.Features.Notifications.GetNotifications.Models;
 using static iSchool_Solution.Features.Profile.Common.Models;
 using static iSchool_Solution.Features.Transcript.Get.Models;
+using static iSchool_Solution.Features.Grade.GetCurrent.Models;
 
 namespace iSchool_Solution.Services;
 
@@ -103,48 +104,6 @@ public class StudentService
 
     #endregion
 
-    #region Course Management
-
-    /// <summary>
-    /// Gets the student's current course schedule
-    /// </summary>
-    /// <param name="studentID">The student's unique identifier</param>
-    /// <returns>The student's course schedule</returns>
-    public async Task<ScheduleResponse> GetStudentScheduleAsync(string studentID)
-    {
-        var currentCourses = await _courseRepository.GetActiveStudentCoursesAsync(studentID);
-        var scheduledCourses = new List<ScheduledCourseInfo>();
-
-        foreach (var courseStudent in currentCourses)
-        {
-            var course = courseStudent.Course;
-            if (course.CourseTimeSlots.Count > 0)
-                foreach (var timeslot in course.CourseTimeSlots)
-                {
-                    var lecturer = course.LecturerCourses.FirstOrDefault()?.Lecturer;
-                    scheduledCourses.Add(new ScheduledCourseInfo
-                    {
-                        CourseID = course.CourseID,
-                        CourseCode = course.CourseCode,
-                        CourseName = course.CourseName,
-                        Day = timeslot.DayOfWeek,
-                        StartTime = timeslot.StartTime.ToString(@"hh\:mm tt"),
-                        EndTime = timeslot.EndTime.ToString(@"hh\:mm tt"),
-                        Location = timeslot.Location.ToString(),
-                        LecturerName = $"{lecturer?.LecturerFirstName} {lecturer?.LecturerLastName}"
-                    });
-                }
-        }
-
-        return new ScheduleResponse
-        {
-            Courses = scheduledCourses
-        };
-    }
-
-
-    #endregion
-
     #region Academic Records
 
     /// <summary>
@@ -162,10 +121,10 @@ public class StudentService
     /// </summary>
     /// <param name="studentID">The student's unique identifier</param>
     /// <param name="semester">The semester to get grades for</param>
-    /// <param name="year">The academic year</param>
+    /// <param name="academicYear">The academic year</param>
     /// <returns>List of course grades</returns>
     public async Task<List<SemesterGradesResponse>> GetSemesterGradesAsync(string studentID, Semester semester,
-        int year)
+        string academicYear)
     {
         var semesterRecord = await _context.SemesterRecords
             .Include(sr => sr.Grades)
@@ -173,9 +132,9 @@ public class StudentService
             .FirstOrDefaultAsync(sr =>
                 sr.StudentID == studentID &&
                 sr.Semester == semester &&
-                sr.AcademicYear == $"{year}-{year + 1}");
+                sr.AcademicYear == academicYear);
 
-        if (semesterRecord == null) throw new SemesterRecordNotFoundException(studentID, semester, year);
+        if (semesterRecord == null) throw new SemesterRecordNotFoundException(studentID, academicYear, semester);
 
         semesterRecord.CalculateSemesterGPA();
         await _context.SaveChangesAsync();
@@ -261,6 +220,61 @@ public class StudentService
         }
 
         return academicSummaryResponse;
+    }
+
+    /// <summary>
+    /// Gets the current grades for a student's enrolled courses
+    /// </summary>
+    /// <param name="studentID">The student's unique identifier</param>
+    /// <returns>The student's current course grades</returns>
+    public async Task<CurrentGradesResponse> GetCurrentGradesAsync(string studentID)
+    {
+        // Check if student exists
+        var student = await _studentRepository.GetStudentByStudentIDAsync(studentID);
+        if (student == null) throw new StudentNotFoundException(studentID);
+
+        // Get active registration period
+        var activeRegistrationPeriod = await _context.RegistrationPeriods
+            .FirstOrDefaultAsync(rp => rp.IsActive);
+
+        if (activeRegistrationPeriod == null)
+        {
+            _logger.LogWarning("No active registration period found for student {StudentID}", studentID);
+            return new CurrentGradesResponse { CurrentCourses = new List<CurrentCourseGradeInfo>() };
+        }
+
+        // Get current enrolled courses
+        var currentEnrollments = await _courseRepository.GetActiveStudentCoursesAsync(studentID);
+        var currentCourses = new List<CurrentCourseGradeInfo>();
+
+        foreach (var enrollment in currentEnrollments)
+        {
+            var course = enrollment.Course;
+
+            // Look for an existing grade for this course
+            var existingGrade = await _context.Grades
+                .FirstOrDefaultAsync(g =>
+                    g.StudentID == studentID &&
+                    g.CourseID == course.CourseID &&
+                    g.SemesterRecord.StartDate >= activeRegistrationPeriod.StartDate);
+
+            // Create the course grade info with available data
+            var courseGradeInfo = new CurrentCourseGradeInfo
+            {
+                CourseCode = course.CourseCode,
+                CourseName = course.CourseName,
+                Credits = course.CourseCredits,
+                CurrentGrade = existingGrade?.GradeLetter.ToString() ?? "N/A",
+                GradeValue = existingGrade?.GradeLetter.GetGradePoints() ?? 0.0
+            };
+
+            currentCourses.Add(courseGradeInfo);
+        }
+
+        return new CurrentGradesResponse
+        {
+            CurrentCourses = currentCourses
+        };
     }
 
     #endregion
