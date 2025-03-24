@@ -1,7 +1,18 @@
-﻿namespace iSchool_Solution.Features.Transcript.Download;
+﻿using iSchool_Solution.Enums;
+
+namespace iSchool_Solution.Features.Transcript.Download;
 
 public class Models
 {
+    public class DownloadTranscriptRequest
+    {
+        public string StudentID { get; set; } = string.Empty;
+        public bool IsOfficial { get; set; } = false;
+        public TranscriptFormat Format { get; set; }
+        public Guid? SemesterID { get; set; } // If provided, downloads transcript for just one semester
+        public string? Purpose { get; set; } // Why the transcript is being requested (for audit logs)
+    }
+    
     public class DownloadTranscriptResponse
     {
         public Guid TranscriptID { get; set; }

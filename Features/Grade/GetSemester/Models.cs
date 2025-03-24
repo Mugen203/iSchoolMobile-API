@@ -4,15 +4,22 @@ namespace iSchool_Solution.Features.Grade.GetSemester;
 
 public class Models
 {
+    public class SemesterGradesRequest
+    {
+        public string StudentID { get; set; } = string.Empty;
+        public Semester Semester { get; set; }
+        public string AcademicYear { get; set; } = string.Empty;
+    }
+
     public class SemesterGradesResponse
     {
         public double SemesterGPA { get; set; }
         public int CreditsAttempted { get; set; }
         public int CreditsEarned { get; set; }
-        public List<CourseGradeInfo> Grades { get; set; } = new List<CourseGradeInfo>();
+        public List<CourseGradeInfo> Grades { get; set; } = [];
     }
 
-    public class CourseGradeInfo // New DTO specific for GetSemesterGrades
+    public class CourseGradeInfo
     {
         public Guid GradeID { get; set; }
         public Guid CourseID { get; set; }
