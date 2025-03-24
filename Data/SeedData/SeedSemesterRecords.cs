@@ -33,7 +33,7 @@ public static class SeedSemesterRecords
                 SemesterRecordID = SemesterRecord_FirstSem2021_2022_Id,
                 TranscriptID = SeedTranscripts.TranscriptForStudent222CS01000694Id,
                 StudentID = "222CS01000694",
-                AcademicYear = "2021/2022",
+                AcademicYear = "2021-2022",
                 Semester = Semester.September,
                 StartDate = new DateTimeOffset(new DateTime(2021, 9, 1)), // Example Start Date
                 EndDate = new DateTimeOffset(new DateTime(2021, 12, 15)) // Example End Date
@@ -47,7 +47,7 @@ public static class SeedSemesterRecords
                 SemesterRecordID = SemesterRecord_SecondSem2021_2022_Id,
                 TranscriptID = SeedTranscripts.TranscriptForStudent222CS01000694Id,
                 StudentID = "222CS01000694",
-                AcademicYear = "2021/2022",
+                AcademicYear = "2021-2022",
                 Semester = Semester.January,
                 StartDate = new DateTimeOffset(new DateTime(2022, 1, 15)), // Example Start Date
                 EndDate = new DateTimeOffset(new DateTime(2022, 5, 30)) // Example End Date
@@ -61,7 +61,7 @@ public static class SeedSemesterRecords
                 SemesterRecordID = SemesterRecord_FirstSem2022_2023_Id,
                 TranscriptID = SeedTranscripts.TranscriptForStudent222CS01000694Id,
                 StudentID = "222CS01000694",
-                AcademicYear = "2022/2023",
+                AcademicYear = "2022-2023",
                 Semester = Semester.September,
                 StartDate = new DateTimeOffset(new DateTime(2022, 9, 1)), // Example Start Date
                 EndDate = new DateTimeOffset(new DateTime(2022, 12, 15)) // Example End Date
@@ -75,7 +75,7 @@ public static class SeedSemesterRecords
                 SemesterRecordID = SemesterRecord_SecondSem2022_2023_Id,
                 TranscriptID = SeedTranscripts.TranscriptForStudent222CS01000694Id,
                 StudentID = "222CS01000694",
-                AcademicYear = "2022/2023",
+                AcademicYear = "2022-2023",
                 Semester = Semester.January,
                 StartDate = new DateTimeOffset(new DateTime(2023, 1, 15)), // Example Start Date
                 EndDate = new DateTimeOffset(new DateTime(2023, 5, 30)) // Example End Date
@@ -89,7 +89,7 @@ public static class SeedSemesterRecords
                 SemesterRecordID = SemesterRecord_FirstSem2023_2024_Id,
                 TranscriptID = SeedTranscripts.TranscriptForStudent222CS01000694Id,
                 StudentID = "222CS01000694",
-                AcademicYear = "2023/2024",
+                AcademicYear = "2023-2024",
                 Semester = Semester.September,
                 StartDate = new DateTimeOffset(new DateTime(2023, 9, 1)), // Example Start Date
                 EndDate = new DateTimeOffset(new DateTime(2023, 12, 15)) // Example End Date
@@ -103,7 +103,7 @@ public static class SeedSemesterRecords
                 SemesterRecordID = SemesterRecord_SecondSem2023_2024_Id,
                 TranscriptID = SeedTranscripts.TranscriptForStudent222CS01000694Id,
                 StudentID = "222CS01000694",
-                AcademicYear = "2023/2024",
+                AcademicYear = "2023-2024",
                 Semester = Semester.January,
                 StartDate = new DateTimeOffset(new DateTime(2024, 1, 15)), // Example Start Date
                 EndDate = new DateTimeOffset(new DateTime(2024, 5, 30)) // Example End Date

@@ -17,7 +17,7 @@ public class LecturerEvaluationConfiguration : IEntityTypeConfiguration<Lecturer
         builder.HasOne(le => le.Course)
             .WithMany()
             .HasForeignKey(le => le.CourseID)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(le => le.Lecturer)
             .WithMany(l => l.Evaluations)

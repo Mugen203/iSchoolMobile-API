@@ -76,6 +76,8 @@ public class ApplicationDbContext : IdentityDbContext<ApiUser>
 
     private void SeedAllData(ModelBuilder builder)
     {
+        //TODO: Recheck migrations
+        
         // First tier - no foreign key dependencies
         SeedFaculties.Seed(builder);
         SeedUsers.Seed(builder);
@@ -103,7 +105,7 @@ public class ApplicationDbContext : IdentityDbContext<ApiUser>
         SeedCourseStudents.Seed(builder);
 
         // Fifth tier - Seed Grades IMMEDIATELY after SemesterRecords and Courses
-        SeedGrades.Seed(builder); // Moved up
+        SeedGrades.Seed(builder); 
 
         // Sixth tier - financial data (no impact on Grades)
         SeedFinancialRecords.Seed(builder);

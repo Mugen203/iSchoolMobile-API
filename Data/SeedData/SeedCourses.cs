@@ -676,8 +676,6 @@ public static class SeedCourses
                 CourseCredits = 3,
                 DepartmentID = departmentOfComputerScienceId
             }
-
-            // ... (REST OF THE COURSES FROM IMAGE) ...
         );
     }
 }
