@@ -10,7 +10,7 @@ public class SemesterRecordNotFoundException : KeyNotFoundException
     public Guid? SemesterRecordId { get; }
 
     public SemesterRecordNotFoundException(string studentID, Semester semester, int year) 
-        : base($"Semester record not found for student '{studentID}', semester {semester}, year {year}.")
+        : base($"Semester record not found for student '{studentID}', semester {semester}, academic year {year}-{year + 1}.")
     {
         StudentId = studentID;
         Semester = semester;
