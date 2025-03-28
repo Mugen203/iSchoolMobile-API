@@ -1,4 +1,5 @@
-﻿using FastEndpoints;
+﻿using System.Security.Claims;
+using FastEndpoints;
 using iSchool_Solution.Exceptions;
 using iSchool_Solution.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -10,10 +11,12 @@ namespace iSchool_Solution.Features.Profile.Update;
 public class Endpoint : Endpoint<ProfileRequest, ProfileResponse>
 {
     private readonly StudentService _studentService;
+    private readonly ILogger<Endpoint> _logger;
 
-    public Endpoint(StudentService studentService)
+    public Endpoint(StudentService studentService, ILogger<Endpoint> logger)
     {
         _studentService = studentService;
+        _logger = logger;
     }
 
     public override void Configure()
@@ -33,41 +36,44 @@ public class Endpoint : Endpoint<ProfileRequest, ProfileResponse>
 
     public override async Task HandleAsync(ProfileRequest request, CancellationToken cancellationToken)
     {
-        // Get the student ID from the claims
-        var user = HttpContext.User;
-        var studentIDClaim = user.FindFirst("StudentID");
-        if (studentIDClaim == null || string.IsNullOrEmpty(studentIDClaim.Value))
+        var studentID = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(studentID)) 
         {
-            await SendErrorsAsync(400, cancellationToken);
+            _logger.LogWarning("Student ID (NameIdentifier) claim was not found in token for profile update.");
+            await SendUnauthorizedAsync(cancellationToken);
             return;
         }
-        
-        var studentID = studentIDClaim.Value;
+
+        _logger.LogInformation("Attempting to update profile for StudentID: {StudentID}", studentID);
+
         try
         {
-            // Update the student profile using StudentService
             var success = await _studentService.UpdateStudentProfileAsync(studentID, request);
-            
+
             if (success)
             {
-                // Fetch the updated profile to return
+                _logger.LogInformation("Profile successfully updated for StudentID: {StudentID}. Fetching updated profile.", studentID);
                 var updatedProfile = await _studentService.GetStudentProfileAsync(studentID);
                 await SendOkAsync(updatedProfile, cancellationToken);
             }
             else
             {
-                AddError("Failed to update profile");
+                _logger.LogError("Profile update failed for StudentID: {StudentID} (Service returned false).", studentID);
+                AddError("Failed to update profile due to an internal issue.");
                 await SendErrorsAsync(StatusCodes.Status500InternalServerError, cancellationToken);
             }
         }
         catch (StudentProfileNotFoundException ex)
         {
+            _logger.LogWarning(ex, "Profile not found during update attempt for StudentID: {StudentID}", studentID);
             AddError(ex.Message);
-            await SendErrorsAsync(StatusCodes.Status404NotFound, cancellationToken);
+            await SendNotFoundAsync(cancellationToken);
         }
         catch (Exception ex)
         {
-            AddError(ex.Message);
+            _logger.LogError(ex, "Error updating profile for StudentID: {StudentID}", studentID);
+            AddError(ex.Message); 
             await SendErrorsAsync(StatusCodes.Status500InternalServerError, cancellationToken);
         }
     }

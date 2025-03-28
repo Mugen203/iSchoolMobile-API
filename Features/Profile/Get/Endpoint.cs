@@ -1,4 +1,6 @@
-﻿using FastEndpoints;
+﻿using System.Security.Claims;
+using FastEndpoints;
+using iSchool_Solution.Exceptions;
 using iSchool_Solution.Services;
 using Microsoft.AspNetCore.Authorization;
 using static iSchool_Solution.Features.Profile.Common.Models;
@@ -8,11 +10,13 @@ namespace iSchool_Solution.Features.Profile.Get;
 [Authorize]
 public class Endpoint : EndpointWithoutRequest<ProfileResponse>
 {
+    private readonly ILogger<Endpoint> _logger;
     private readonly StudentService _studentService;
     
-    public Endpoint(StudentService studentService)
+    public Endpoint(StudentService studentService, ILogger<Endpoint> logger)
     {
         _studentService = studentService;
+        _logger = logger;
     }
     
     public override void Configure()
@@ -20,6 +24,9 @@ public class Endpoint : EndpointWithoutRequest<ProfileResponse>
         Get("api/student/profile");
         Roles("Student");
         Description(description => description
+            .WithName("GetStudentProfile")
+            .WithSummary("Gets an authenticated student's profile")
+            .WithTags("Profile")
             .Produces<ProfileResponse>()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status400BadRequest)
@@ -29,19 +36,32 @@ public class Endpoint : EndpointWithoutRequest<ProfileResponse>
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var user = HttpContext.User;
+        var studentID = User.FindFirstValue(ClaimTypes.NameIdentifier);
         
-        var studentIDClaim = user.FindFirst("StudentID");
-        if (studentIDClaim == null || string.IsNullOrEmpty(studentIDClaim.Value))
+        if (string.IsNullOrEmpty(studentID))
         {
-            await SendErrorsAsync(400, cancellationToken);
+            _logger.LogWarning("Student ID (NameIdentifier) claim was not found in token for profile get.");
+            await SendUnauthorizedAsync(cancellationToken);
             return;
         }
-        
-        var studentID = studentIDClaim.Value;
 
-        var profile = await _studentService.GetStudentProfileAsync(studentID);
-        
-        await SendOkAsync(profile, cancellationToken);
+        _logger.LogInformation("Fetching profile for StudentID: {StudentID}", studentID);
+
+        try
+        {
+            var profile = await _studentService.GetStudentProfileAsync(studentID);
+            _logger.LogInformation("Successfully fetched profile for StudentID: {StudentID}", studentID);
+            await SendOkAsync(profile, cancellationToken);
+        }
+        catch (StudentNotFoundException ex) 
+        {
+            _logger.LogWarning(ex, "Profile not found for StudentID: {StudentID}", studentID);
+            await SendNotFoundAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching profile for StudentID: {StudentID}", studentID);
+            await SendErrorsAsync(StatusCodes.Status500InternalServerError, cancellationToken); 
+        }
     }
 }
