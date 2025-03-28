@@ -37,12 +37,12 @@ public class Endpoint : Endpoint<SemesterGradesRequest, List<SemesterGradesRespo
 
     public override async Task HandleAsync(SemesterGradesRequest request, CancellationToken cancellationToken)
     {
-        var studentID = User.FindFirstValue("StudentID");
+        var studentID = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(studentID))
         {
-            _logger.LogWarning("Student ID was not found in token claims during semester grades retrieval");
-            AddError("Student ID is required but not found");
-            await SendErrorsAsync(StatusCodes.Status401Unauthorized, cancellationToken);
+            _logger.LogWarning("Student ID (NameIdentifier) claim was not found in token."); 
+            AddError("Student ID required but not found");
+            await SendUnauthorizedAsync(cancellationToken); 
             return;
         }
 
