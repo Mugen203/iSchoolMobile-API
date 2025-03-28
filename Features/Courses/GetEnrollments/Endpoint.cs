@@ -36,12 +36,11 @@ public class Endpoint: Endpoint<EnrollmentsRequest, EnrollmentsResponse>
 
     public override async Task HandleAsync(EnrollmentsRequest request, CancellationToken cancellationToken)
     {
-        var studentID = User.FindFirstValue("studentID");
+        var studentID = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(studentID))
         {
-            _logger.LogWarning("Student ID was not found in token claims during enrollments retrieval");
-            AddError("Student ID is required but not found");
-            await SendErrorsAsync(StatusCodes.Status401Unauthorized, cancellationToken);
+            _logger.LogWarning("Student ID (NameIdentifier) claim was not found in token.");
+            await SendUnauthorizedAsync(cancellationToken);
             return;
         }
 

@@ -20,7 +20,8 @@ public class Endpoint : Endpoint<CourseDetailsRequest, CourseDetailsResponse>
 
     public override void Configure()
     {
-        Get("api/courses/{courseID}");
+        Get("api/courses/{CourseCode}");
+        Roles("Student");
         Description(description => description
             .WithName("GetCourseDetails")
             .WithSummary("Gets detailed information about a specific course")

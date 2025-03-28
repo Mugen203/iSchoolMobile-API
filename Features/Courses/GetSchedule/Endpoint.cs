@@ -36,12 +36,11 @@ public class Endpoint : EndpointWithoutRequest<ScheduleResponse>
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var studentID = User.FindFirstValue("StudentID");
+        var studentID = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(studentID))
         {
-            _logger.LogInformation("Student ID was not found from claims during schedule retrieval");
-            AddError("Student ID is required but not found");
-            await SendErrorsAsync(StatusCodes.Status401Unauthorized, cancellationToken);
+            _logger.LogWarning("Student ID (NameIdentifier) claim was not found in token.");
+            await SendUnauthorizedAsync(cancellationToken); 
             return;
         }
 
@@ -50,6 +49,7 @@ public class Endpoint : EndpointWithoutRequest<ScheduleResponse>
             var scheduleResponse = await _courseQueryService.GetStudentScheduleAsync(studentID);
             _logger.LogInformation("Retrieved schedule for student: {studentID} with {courseCount} courses",
                 studentID, scheduleResponse.Courses.Count);
+            await SendOkAsync(scheduleResponse, cancellationToken);
         }
         catch (StudentNotFoundException ex)
         {
