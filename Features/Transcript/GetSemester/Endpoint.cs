@@ -1,5 +1,5 @@
-﻿using FastEndpoints;
-using iSchool_Solution.Enums;
+﻿using System.Security.Claims;
+using FastEndpoints;
 using iSchool_Solution.Exceptions;
 using iSchool_Solution.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -35,6 +35,21 @@ public class Endpoint : Endpoint<SemesterTranscriptRequest, SemesterTranscriptRe
 
     public override async Task HandleAsync(SemesterTranscriptRequest request, CancellationToken cancellationToken)
     {
+        var authenticatedUserID = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        _logger.LogInformation(
+            "Semester transcript requested for StudentID: {RequestedStudentID} (Year: {AcademicYear}, Semester: {Semester}) by UserID: {AuthenticatedUserID}",
+            request.StudentID, request.AcademicYear, request.Semester, authenticatedUserID);
+
+        if (request.StudentID != authenticatedUserID && !User.IsInRole("Admin"))
+        {
+            _logger.LogWarning(
+                "Authorization failed: User {AuthenticatedUserID} attempted to access semester transcript for {RequestedStudentID}.",
+                authenticatedUserID, request.StudentID);
+            await SendForbiddenAsync(cancellationToken); 
+            return;
+        }
+
         try
         {
             if (!string.IsNullOrEmpty(request.AcademicYear) &&
