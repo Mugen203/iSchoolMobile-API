@@ -23,14 +23,4 @@ public class Models
         public decimal UpdatedOutstandingBalance { get; set; } // Return the new balance for confirmation
         public string Message { get; set; } = string.Empty;
     }
-    
-    public sealed class PaymentSummary
-    {
-        public Guid PaymentID { get; set; }
-        public decimal Amount { get; set; }
-        public DateTimeOffset PaymentDate { get; set; }
-        public PaymentMethod PaymentMethod { get; set; }
-        public string ReferenceNumber { get; set; } = string.Empty;
-        public PaymentStatus Status { get; set; } // Status of the payment transaction itself
-    }
 }

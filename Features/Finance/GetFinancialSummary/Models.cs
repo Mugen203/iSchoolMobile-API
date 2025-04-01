@@ -17,7 +17,7 @@ public class Models
         public List<SemesterFinanceDetails> SemesterSummaries { get; set; } = [];
     }
 
-    public sealed class SemesterFinanceDetails
+    public class SemesterFinanceDetails
     {
         public Guid FinancialRecordID { get; set; }
         public string Semester { get; set; } = string.Empty;
