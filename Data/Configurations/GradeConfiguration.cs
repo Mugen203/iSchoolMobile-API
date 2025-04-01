@@ -17,7 +17,7 @@ public class GradeConfiguration : IEntityTypeConfiguration<Grade>
         builder.HasOne(g => g.Course)
             .WithMany(c => c.Grades)
             .HasForeignKey(g => g.CourseID)
-            .OnDelete(DeleteBehavior.ClientCascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(g => g.SemesterRecord)
             .WithMany(sr => sr.Grades)

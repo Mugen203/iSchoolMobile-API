@@ -36,6 +36,13 @@ public class ApplicationDbContext : IdentityDbContext<ApiUser>
     public DbSet<ResourceBorrowing> ResourceBorrowings { get; set; }
     public DbSet<SemesterRecord> SemesterRecords { get; set; }
     public DbSet<Transcript> Transcripts { get; set; }
+    
+    // --- DbSets for New Finance Entities ---
+    public DbSet<Invoice> Invoices { get; set; }
+    public DbSet<InvoiceLineItem> InvoiceLineItems { get; set; }
+    public DbSet<PaymentGatewayTransaction> PaymentGatewayTransactions { get; set; }
+    public DbSet<PaymentReminder> PaymentReminders { get; set; }
+    // --- End New DbSets ---
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -72,6 +79,13 @@ public class ApplicationDbContext : IdentityDbContext<ApiUser>
         builder.ApplyConfiguration(new SemesterRecordConfiguration());
         builder.ApplyConfiguration(new StudentConfiguration());
         builder.ApplyConfiguration(new TranscriptConfiguration());
+        
+        // --- Configurations for New Entities ---
+        builder.ApplyConfiguration(new InvoiceConfiguration());
+        builder.ApplyConfiguration(new InvoiceLineItemConfiguration());
+        builder.ApplyConfiguration(new PaymentGatewayTransactionConfiguration());
+        builder.ApplyConfiguration(new PaymentReminderConfiguration());
+        // --- End New Configurations --
     }
 
     private void SeedAllData(ModelBuilder builder)

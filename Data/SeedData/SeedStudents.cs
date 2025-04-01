@@ -24,7 +24,6 @@ public static class SeedStudents
                 StudentPhone = "0553138727",
                 Degree = "BSc Computer Science",
                 DepartmentID = departmentID,
-                DepartmentName = "Computer Science",
                 EmergencyContactName = "Kojo Ansah Affram",
                 EmergencyContactPhone = "0501122334"
             },
@@ -43,7 +42,6 @@ public static class SeedStudents
                 StudentPhone = "0553138727",
                 Degree = "BSc Computer Science",
                 DepartmentID = departmentID,
-                DepartmentName = "Computer Science",
                 EmergencyContactName = "Kwaku Ampem Affram",
                 EmergencyContactPhone = "0506590716"
             }
