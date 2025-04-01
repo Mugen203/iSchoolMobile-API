@@ -6,5 +6,6 @@ public enum PaymentMethod
     DebitCard = 2,
     BankTransfer = 3,
     Cheque = 4,
-    Cash = 5
+    Cash = 5,
+    Paystack = 6
 }
