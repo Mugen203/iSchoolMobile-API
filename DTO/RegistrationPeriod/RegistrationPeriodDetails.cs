@@ -1,4 +1,4 @@
-﻿using iSchool_Solution.Entities.DTO.Course;
+﻿
 
 namespace iSchool_Solution.Entities.DTO.RegistrationPeriod;
 
@@ -14,6 +14,5 @@ public record RegistrationPeriodDetails(
     bool AllowCourseDrop,
     DateTimeOffset? LateRegistrationStart,
     DateTimeOffset? LateRegistrationEnd,
-    decimal? LateRegistrationFee,
-    List<CourseEnrollment> CourseEnrollments
+    decimal? LateRegistrationFee
 );
