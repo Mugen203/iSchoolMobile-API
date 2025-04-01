@@ -53,6 +53,22 @@ public class EnrollmentService
         var registrationPeriod = await _registrationRepository.GetActiveRegistrationPeriodAsync();
         if (registrationPeriod == null) throw new RegistrationException("No active registration period found");
 
+        // Registration period checks
+        var now = DateTime.UtcNow; // Use UTC for comparisons
+        bool isWithinRegularPeriod = now >= registrationPeriod.StartDate && now <= registrationPeriod.EndDate && registrationPeriod.AllowCourseAdd;
+        bool isWithinLatePeriod = registrationPeriod.LateRegistrationStart.HasValue &&
+                                  registrationPeriod.LateRegistrationEnd.HasValue &&
+                                  now >= registrationPeriod.LateRegistrationStart.Value &&
+                                  now <= registrationPeriod.LateRegistrationEnd.Value &&
+                                  registrationPeriod.AllowCourseAdd;
+
+        if (!isWithinRegularPeriod && !isWithinLatePeriod)
+        {
+            _logger.LogWarning("Course registration attempt outside allowed period for StudentID: {StudentID}. Current Time: {Now}, Period: {StartDate} - {EndDate}, Late Start: {LateStart}, Late End: {LateEnd}, AllowAdd: {AllowAdd}",
+                studentID, now, registrationPeriod.StartDate, registrationPeriod.EndDate, registrationPeriod.LateRegistrationStart, registrationPeriod.LateRegistrationEnd, registrationPeriod.AllowCourseAdd);
+            throw new RegistrationException("Course registration is not currently open or allowed for adding courses.");
+        }
+        
         // Get courses by their codes
         var courses = await _courseRepository.GetCoursesByCodesAsync(request.CourseCodes);
 
