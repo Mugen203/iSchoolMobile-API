@@ -4,6 +4,10 @@ using iSchool_Solution.Enums;
 using iSchool_Solution.Exceptions;
 using iSchool_Solution.Repository;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+using static iSchool_Solution.Features.Finance.DownloadStatement.Models;
 using static iSchool_Solution.Features.Finance.GetFinancialSummary.Models;
 using static iSchool_Solution.Features.Finance.GetPaymentHistory.Models;
 using static iSchool_Solution.Features.Finance.GetPaymentSummary.Models;
@@ -358,5 +362,216 @@ public class FinanceService
             }
 
         _logger.LogInformation("Finished SendPendingReminders task.");
+    }
+
+    /// <summary>
+    /// Generates a Statement of Account PDF for a specific financial record.
+    /// </summary>
+    /// <param name="financialRecordId">The ID of the financial record (semester).</param>
+    /// <returns>Tuple containing PDF bytes, content type, and filename.</returns>
+    /// <exception cref="KeyNotFoundException">Thrown if the record or student not found.</exception>
+    /// <exception cref="ApplicationException"></exception>
+    public async Task<(byte[] FileContents, string ContentType, string FileName)> GenerateStatementPdfAsync(
+        Guid financialRecordId)
+    {
+        _logger.LogInformation("Generating Statement of Account PDF for FinancialRecordID: {RecordID}",
+            financialRecordId);
+
+        // Fetch the record including Student, FeeItems, and Payments
+        var record = await _context.FinancialRecords // Using _context directly for includes
+            .Include(fr => fr.Student)
+            .Include(fr => fr.FeeItems)
+            .Include(fr => fr.Payments)
+            .FirstOrDefaultAsync(fr => fr.FinancialRecordID == financialRecordId);
+
+        if (record == null)
+        {
+            _logger.LogWarning("FinancialRecord not found for PDF generation: {RecordID}", financialRecordId);
+            throw new KeyNotFoundException($"Financial Record with ID {financialRecordId} not found.");
+        }
+
+        if (record.Student == null)
+        {
+            _logger.LogError("Student data missing for FinancialRecordID: {RecordID}", financialRecordId);
+            throw new ApplicationException("Cannot generate statement PDF without student data.");
+        }
+
+        // Prepare data for PDF
+        var statementData = new StatementPdfData
+        {
+            FinancialRecordID = record.FinancialRecordID,
+            StudentName = $"{record.Student.FirstName} {record.Student.LastName}",
+            StudentID = record.StudentID,
+            Semester = record.Semester.ToString(),
+            AcademicYear = record.AcademicYear,
+            TotalFeesForSemester = record.TotalFees,
+            AmountPaidForSemester = record.AmountPaid,
+            OutstandingBalanceForSemester = record.TotalFees - record.AmountPaid, // Recalculate for safety
+            LastUpdated = record.LastUpdated,
+            GeneratedDate = DateTime.UtcNow,
+            FeeItems = record.FeeItems.Select(fi => new FeeItemSummary // Reuse existing DTO
+            {
+                Id = fi.Id, Description = fi.Description, Amount = fi.Amount,
+                Category = fi.FeeItemCategory, PaymentStatus = fi.PaymentStatus,
+                DueDate = fi.DueDate, IsRequired = fi.isRequired
+            }).OrderBy(fi => fi.Description).ToList(),
+            Payments = record.Payments.Select(p => new PaymentSummary // Reuse existing DTO
+            {
+                PaymentID = p.PaymentID, Amount = p.Amount, PaymentDate = p.PaymentDate,
+                PaymentMethod = p.PaymentMethod, ReferenceNumber = p.ReferenceNumber, Status = p.PaymentStatus
+            }).OrderBy(p => p.PaymentDate).ToList()
+        };
+
+        _logger.LogDebug("Data prepared for statement PDF. Student: {StudentID}, RecordID: {RecordID}",
+            statementData.StudentID, statementData.FinancialRecordID);
+
+        try
+        {
+            // Define QuestPDF Document
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(1.5f, Unit.Centimetre);
+                    page.DefaultTextStyle(x => x.FontSize(10));
+
+                    // Header
+                    page.Header()
+                        .AlignCenter()
+                        .Column(col =>
+                        {
+                            col.Item().Text("Valley View University").Bold().FontSize(14);
+                            col.Item().Text("Statement of Account").SemiBold().FontSize(12);
+                            col.Spacing(5);
+                        });
+
+                    // Content
+                    page.Content()
+                        .PaddingVertical(0.5f, Unit.Centimetre)
+                        .Column(col =>
+                        {
+                            col.Spacing(10);
+                            // Student Info
+                            col.Item().Row(row =>
+                            {
+                                row.RelativeItem().Column(c =>
+                                {
+                                    c.Item().Text($"Student Name: {statementData.StudentName}").SemiBold();
+                                    c.Item().Text($"Student ID: {statementData.StudentID}");
+                                });
+                                row.RelativeItem().Column(c =>
+                                {
+                                    c.Item().Text($"Period: {statementData.Semester} {statementData.AcademicYear}")
+                                        .SemiBold();
+                                    c.Item().Text($"Statement Date: {statementData.GeneratedDate:yyyy-MM-dd}");
+                                });
+                            });
+
+                            col.Item().LineHorizontal(0.5f);
+
+                            // Fees Section
+                            col.Item().Text("Fees Charged").Bold();
+                            col.Item().Table(feeTable =>
+                            {
+                                feeTable.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(); // Description
+                                    columns.ConstantColumn(100); // Amount
+                                });
+                                feeTable.Header(header =>
+                                {
+                                    header.Cell().Background(Colors.Grey.Lighten3).Padding(3).Text("Description");
+                                    header.Cell().Background(Colors.Grey.Lighten3).Padding(3).AlignRight()
+                                        .Text("Amount (GHS)");
+                                });
+                                foreach (var item in statementData.FeeItems)
+                                {
+                                    feeTable.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(3)
+                                        .Text(item.Description);
+                                    feeTable.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(3)
+                                        .AlignRight().Text($"{item.Amount:N2}");
+                                }
+
+                                feeTable.Cell().Padding(3).AlignRight().Text("Total Fees:").SemiBold();
+                                feeTable.Cell().Padding(3).AlignRight().Text($"{statementData.TotalFeesForSemester:N2}")
+                                    .SemiBold();
+                            });
+
+                            col.Item().PaddingTop(10); // Add space
+
+                            // Payments Section
+                            col.Item().Text("Payments Received").Bold();
+                            col.Item().Table(paymentTable =>
+                            {
+                                paymentTable.ColumnsDefinition(columns =>
+                                {
+                                    columns.ConstantColumn(80); // Date
+                                    columns.RelativeColumn(); // Method/Reference
+                                    columns.ConstantColumn(100); // Amount
+                                });
+                                paymentTable.Header(header =>
+                                {
+                                    header.Cell().Background(Colors.Grey.Lighten3).Padding(3).Text("Date");
+                                    header.Cell().Background(Colors.Grey.Lighten3).Padding(3)
+                                        .Text("Method / Reference");
+                                    header.Cell().Background(Colors.Grey.Lighten3).Padding(3).AlignRight()
+                                        .Text("Amount (GHS)");
+                                });
+                                foreach (var p in statementData.Payments)
+                                {
+                                    paymentTable.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(3)
+                                        .Text($"{p.PaymentDate:yyyy-MM-dd}");
+                                    paymentTable.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(3)
+                                        .Text($"{p.PaymentMethod} / {p.ReferenceNumber}");
+                                    paymentTable.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(3)
+                                        .AlignRight().Text($"{p.Amount:N2}");
+                                }
+
+                                paymentTable.Cell().ColumnSpan(2).Padding(3).AlignRight().Text("Total Payments:")
+                                    .SemiBold();
+                                paymentTable.Cell().Padding(3).AlignRight()
+                                    .Text($"{statementData.AmountPaidForSemester:N2}").SemiBold();
+                            });
+
+                            col.Item().PaddingTop(10); // Add space
+
+                            // Summary
+                            col.Item().LineHorizontal(1f);
+                            col.Item().PaddingVertical(2).AlignRight()
+                                .Text($"Outstanding Balance: {statementData.OutstandingBalanceForSemester:N2} GHS")
+                                .Bold().FontSize(12);
+                        });
+
+                    // Footer
+                    page.Footer()
+                        .AlignCenter()
+                        .Text(x =>
+                        {
+                            x.Span("Page ");
+                            x.CurrentPageNumber();
+                            x.Span(" of ");
+                            x.TotalPages();
+                        });
+                });
+            });
+
+            // Generate PDF bytes
+            byte[] pdfBytes = document.GeneratePdf();
+            var fileName =
+                $"Statement_{statementData.StudentID}_{statementData.AcademicYear}_{statementData.Semester}.pdf";
+            var contentType = "application/pdf";
+
+            _logger.LogInformation(
+                "Statement PDF generated successfully for RecordID: {RecordID}. Size: {FileSize} bytes",
+                financialRecordId, pdfBytes.Length);
+
+            return (pdfBytes, contentType, fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to generate statement PDF for RecordID: {RecordID}", financialRecordId);
+            throw new ApplicationException("Failed to generate statement PDF.", ex);
+        }
     }
 }

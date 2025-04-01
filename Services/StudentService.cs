@@ -1,4 +1,5 @@
-﻿using iSchool_Solution.Data;
+﻿using FluentValidation;
+using iSchool_Solution.Data;
 using iSchool_Solution.Entities;
 using iSchool_Solution.Enums;
 using iSchool_Solution.Exceptions;
@@ -9,6 +10,7 @@ using static iSchool_Solution.Features.Academics.GetAcademicProgress.Models;
 using static iSchool_Solution.Features.Courses.Conflicts.Models;
 using static iSchool_Solution.Features.Courses.GetSchedule.Models;
 using static iSchool_Solution.Features.Courses.Register.Models;
+using static iSchool_Solution.Features.Evaluation.Submit.Models;
 using static iSchool_Solution.Features.Grade.GetSemester.Models;
 using static iSchool_Solution.Features.Notifications.Common.Models;
 using static iSchool_Solution.Features.Notifications.GetAnnouncements.Models;
@@ -24,25 +26,27 @@ public class StudentService
     private readonly StudentRepository _studentRepository;
     private readonly CourseRepository _courseRepository;
     private readonly CommunicationRepository _communicationRepository;
-    private readonly TranscriptService _transcriptService; // Add this
+    private readonly TranscriptService _transcriptService;
     private readonly ILogger<StudentService> _logger;
     private readonly ApplicationDbContext _context;
+    private readonly EvaluationRepository _evaluationRepository;
 
     public StudentService(
         StudentRepository studentRepository,
         CourseRepository courseRepository,
         ILogger<StudentService> logger,
         ApplicationDbContext context,
-        TranscriptRepository transcriptRepository,
         CommunicationRepository communicationRepository,
-        TranscriptService transcriptService) // Add this
+        TranscriptService transcriptService,
+        EvaluationRepository evaluationRepository)
     {
         _studentRepository = studentRepository;
         _courseRepository = courseRepository;
         _communicationRepository = communicationRepository;
-        _transcriptService = transcriptService; // Add this
+        _transcriptService = transcriptService;
         _logger = logger;
         _context = context;
+        _evaluationRepository = evaluationRepository;
     }
 
 
@@ -68,7 +72,6 @@ public class StudentService
             StudentEmail = student.StudentEmail,
             Address = student.Address,
             Degree = student.Degree,
-            DepartmentName = student.DepartmentName,
             Gender = student.Gender,
             PhoneNumber = student.StudentPhone,
             StudentPhotoUrl = student.StudentPhotoUrl,
@@ -141,16 +144,16 @@ public class StudentService
 
         var gradesResponse = new List<SemesterGradesResponse>();
         var courseGradeInfoList = semesterRecord.Grades.Select(grade => new CourseGradeInfo
-        {
-            GradeID = grade.GradeID,
-            CourseID = grade.CourseID,
-            CourseCode = grade.Course.CourseCode,
-            CourseName = grade.Course.CourseName,
-            Credits = grade.Course.CourseCredits,
-            Grade = grade.GradeLetter,
-            GradePoints = grade.GradeLetter.GetGradePoints(),
-            Remarks = grade.Remarks
-        })
+            {
+                GradeID = grade.GradeID,
+                CourseID = grade.CourseID,
+                CourseCode = grade.Course.CourseCode,
+                CourseName = grade.Course.CourseName,
+                Credits = grade.Course.CourseCredits,
+                Grade = grade.GradeLetter,
+                GradePoints = grade.GradeLetter.GetGradePoints(),
+                Remarks = grade.Remarks
+            })
             .ToList();
 
         gradesResponse.Add(new SemesterGradesResponse
@@ -356,7 +359,6 @@ public class StudentService
 
     #region Helpers
 
-
     private async Task RecalculateTranscriptGPAAsync(Transcript transcript)
     {
         transcript.CalculateCummulativeGPA();
@@ -365,4 +367,144 @@ public class StudentService
     }
 
     #endregion
+
+    /// <summary>
+    /// Submits a lecturer/course evaluation from a student.
+    /// </summary>
+    public async Task<SubmitEvaluationResponse> SubmitEvaluationAsync(string studentId, SubmitEvaluationRequest request)
+    {
+        _logger.LogInformation(
+            "Attempting evaluation submission by StudentID: {StudentID} for CourseID: {CourseID}, LecturerID: {LecturerID}, PeriodID: {PeriodID}",
+            studentId, request.CourseID, request.LecturerID, request.EvaluationPeriodID);
+
+        // 1. Validate Evaluation Period
+        var period = await _evaluationRepository.GetEvaluationPeriodByIdAsync(request.EvaluationPeriodID);
+        if (period == null)
+            throw new KeyNotFoundException($"Evaluation Period with ID {request.EvaluationPeriodID} not found.");
+        if (!period.IsActive || DateTime.UtcNow < period.StartDate || DateTime.UtcNow > period.EndDate)
+            throw new InvalidOperationException("Evaluation submission is not currently active for this period.");
+
+        // 2. Validate Course and Lecturer exist
+        var course =
+            await _courseRepository.GetCourseByIDAsync(request.CourseID
+                .ToString());
+        if (course == null) throw new KeyNotFoundException($"Course with ID {request.CourseID} not found.");
+        var lecturer = await _evaluationRepository.GetLecturerByIdAsync(request.LecturerID);
+        if (lecturer == null) throw new KeyNotFoundException($"Lecturer with ID {request.LecturerID} not found.");
+        // Optional: Validate lecturer actually taught this course in this period (requires LecturerCourse check)
+
+        // 3. Verify Student Enrollment (Refined Logic)
+        // Find the RegistrationPeriod matching the EvaluationPeriod's term
+        var relevantRegistrationPeriod = await _context.RegistrationPeriods
+            .FirstOrDefaultAsync(rp =>
+                rp.AcademicYear == period.AcademicYear &&
+                rp.Semester.ToString() == period.Semester.ToString()); // Compare Semester enum/string carefully
+
+        if (relevantRegistrationPeriod == null)
+        {
+            _logger.LogWarning(
+                "Could not find matching RegistrationPeriod for EvaluationPeriodID: {EvaluationPeriodID} (Term: {Semester} {AcademicYear})",
+                period.Id, period.Semester, period.AcademicYear);
+            throw new InvalidOperationException(
+                $"Cannot verify enrollment: No matching registration period found for {period.Semester} {period.AcademicYear}.");
+        }
+
+        var isEnrolled = await _context.CourseStudents
+            .AnyAsync(cs => cs.StudentID == studentId &&
+                            cs.CourseID == request.CourseID &&
+                            cs.RegistrationPeriodID ==
+                            relevantRegistrationPeriod
+                                .RegistrationPeriodID); 
+
+        if (!isEnrolled)
+        {
+            _logger.LogWarning(
+                "Student {StudentID} not enrolled in Course {CourseID} during registration period {RegistrationPeriodID} ({Semester} {AcademicYear})",
+                studentId, request.CourseID, relevantRegistrationPeriod.RegistrationPeriodID, period.Semester,
+                period.AcademicYear);
+            throw new InvalidOperationException(
+                $"Student {studentId} was not enrolled in course {course.CourseCode} during the {period.Semester} {period.AcademicYear} registration period.");
+        }
+
+        _logger.LogInformation("Enrollment verified for Student {StudentID} in Course {CourseID} for Period {PeriodID}",
+            studentId, request.CourseID, relevantRegistrationPeriod.RegistrationPeriodID);
+
+        // 4. Check for Prior Submission
+        // TODO: Add StudentID to LecturerEvaluation entity to enable this check accurately.
+        // For now, commenting out the check:
+        /*
+        var alreadySubmitted = await _evaluationRepository.HasStudentSubmittedEvaluationAsync(
+                                    studentId, request.CourseID, request.LecturerID, request.EvaluationPeriodID);
+        if (alreadySubmitted)
+        {
+            throw new InvalidOperationException("Evaluation already submitted for this course and lecturer during this period.");
+        }
+        */
+
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            // 5. Create Main Evaluation Record
+            var newEvaluation = new LecturerEvaluation
+            {
+                EvaluationPeriodID = request.EvaluationPeriodID,
+                CourseID = request.CourseID,
+                LecturerID = request.LecturerID,
+                SubmissionDate = DateTimeOffset.UtcNow,
+                Comments = request.Comments ?? string.Empty,
+                Responses = new List<EvaluationResponse>() // Initialize collection
+            };
+
+            // 6. Process and Validate Individual Responses
+            foreach (var reqResponse in request.Responses)
+            {
+                var question = await _evaluationRepository.GetEvaluationQuestionByIdAsync(reqResponse.QuestionID);
+                if (question == null)
+                    throw new ValidationException($"Invalid QuestionID ({reqResponse.QuestionID}) submitted.");
+
+                // Validate response type matches question type
+                if (question.QuestionType == QuestionType.Rating && !reqResponse.RatingValue.HasValue)
+                    throw new ValidationException(
+                        $"Rating value is required for question ID {question.Id} ({question.QuestionText}).");
+                if (question.QuestionType == QuestionType.Text && string.IsNullOrWhiteSpace(reqResponse.TextResponse))
+                    throw new ValidationException(
+                        $"Text response is required for question ID {question.Id} ({question.QuestionText}).");
+                // Add more validation if needed (e.g., check RatingValue against PossibleAnswers for rating type)
+
+                var dbResponse = new EvaluationResponse
+                {
+                    EvaluationQuestionID = reqResponse.QuestionID,
+                    RatingValue = reqResponse.RatingValue,
+                    TextResponse = reqResponse.TextResponse,
+                    SelectedOption = reqResponse.SelectedOption,
+                    Evaluation = newEvaluation // Link back to the parent evaluation
+                };
+                newEvaluation.Responses.Add(dbResponse);
+            }
+
+            // 7. Save Evaluation and Responses
+            await _evaluationRepository.AddLecturerEvaluationAsync(newEvaluation);
+            await _context.SaveChangesAsync(); // Save within transaction
+
+            await transaction.CommitAsync();
+
+            _logger.LogInformation("Successfully submitted evaluation ID: {EvaluationID} by StudentID: {StudentID}",
+                newEvaluation.Id, studentId);
+
+            return new SubmitEvaluationResponse
+            {
+                Success = true,
+                Message = "Evaluation submitted successfully.",
+                EvaluationId = newEvaluation.Id
+            };
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError(ex, "Error submitting evaluation for StudentID: {StudentID}", studentId);
+            // Re-throw specific exceptions if needed, otherwise let the endpoint handle generic error
+            throw;
+        }
+    }
 }
