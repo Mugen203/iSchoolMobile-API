@@ -12,11 +12,15 @@ builder.Services.ConfigureSqlContext(builder.Configuration);
 builder.Services.AddMemoryCache();
 
 // Repository registrations
+builder.Services.AddScoped<EvaluationRepository>();
 builder.Services.AddScoped<StudentRepository>();
 builder.Services.AddScoped<CourseRepository>();
 builder.Services.AddScoped<TranscriptRepository>();
 builder.Services.AddScoped<CommunicationRepository>();
 builder.Services.AddScoped<RegistrationRepository>();
+builder.Services.AddScoped<FinanceRepository>(); 
+builder.Services.AddScoped<ResearchRepository>();
+builder.Services.AddScoped<LibraryRepository>();
 
 // Service registrations
 builder.Services.AddScoped<AuthService>();
@@ -27,6 +31,11 @@ builder.Services.AddScoped<EnrollmentService>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<TranscriptService>();
 builder.Services.AddScoped<StudentService>();
+builder.Services.AddScoped<FinanceService>();
+builder.Services.AddScoped<InvoiceService>(); 
+builder.Services.AddScoped<PaystackService>();
+builder.Services.AddScoped<ResearchService>();
+builder.Services.AddScoped<LibraryService>();
 
 builder.Services.ConfigureEmail(builder.Configuration);
 
