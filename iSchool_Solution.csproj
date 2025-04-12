@@ -21,6 +21,8 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.6.0"/>
+        <PackageReference Include="Paystack.Net" Version="1.1.1" />
+        <PackageReference Include="QuestPDF" Version="2025.4.0" />
     </ItemGroup>
 
     <ItemGroup>
